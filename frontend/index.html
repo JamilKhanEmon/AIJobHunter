@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobHunter Pro - Autonomous Multi-Agent Career Platform</title>
+  <meta name="description" content="Commercial-grade autonomous career copilot for ATS scraping, AI job scoring, and automated form submissions.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <div class="app-layout">
+
+    <!-- ==============================================================
+         LEFT NAVIGATION SIDEBAR (Linear / Raycast Style)
+         ============================================================== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-symbol">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">
+            JobHunter <span class="brand-badge">PRO</span>
+          </div>
+          <div class="brand-role">Autonomous Career Agent</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Operations</div>
+        <button class="nav-item active" data-tab="tab-radar" id="nav-btn-radar" onclick="switchTab('tab-radar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+          <span>Job Radar</span>
+          <span class="nav-counter" id="nav-counter-total">0</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-kanban" id="nav-btn-kanban" onclick="switchTab('tab-kanban')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+          <span>Pipeline Kanban</span>
+          <span class="nav-counter" style="color: #a5b4fc;">Live</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-letters" id="nav-btn-letters" onclick="switchTab('tab-letters')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Cover Letter Studio</span>
+          <span class="nav-counter" style="color: #34d399;">AI</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-terminal" id="nav-btn-terminal" onclick="switchTab('tab-terminal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+          <span>Live Console</span>
+          <span class="nav-counter" id="nav-counter-live" style="color: var(--accent-emerald);">●</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-crawlers" id="nav-btn-crawlers" onclick="switchTab('tab-crawlers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+          <span>ATS Crawlers Hub</span>
+        </button>
+
+        <div class="nav-section-title">Preferences</div>
+        <button class="nav-item" data-tab="tab-profile" id="nav-btn-profile" onclick="switchTab('tab-profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Candidate Profile</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-settings" id="nav-btn-settings" onclick="switchTab('tab-settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>LLM Engine Config</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="agent-status-card">
+          <div class="status-row">
+            <span class="status-pill">
+              <span class="status-dot-pulse"></span> Agent Cluster Active
+            </span>
+          </div>
+          <div class="model-name" id="sidebar-active-model">ollama/llama3.3</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==============================================================
+         MAIN WORKSPACE AREA
+         ============================================================== -->
+    <main class="workspace">
+      
+      <!-- Top Bar -->
+      <header class="workspace-header">
+        <div class="header-left">
+          <div class="page-title" id="page-headline">Job Radar & Discovery</div>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="global-search-input" placeholder="Search roles, companies, tech stack...">
+            <span class="search-shortcut">⌘K</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Live Auto-Pilot Daemon Beacon -->
+          <div class="autopilot-status-badge" id="header-autopilot-beacon" title="Autonomous Background Daemon Running Every 12 Hours">
+            <span class="autopilot-pulse-dot"></span>
+            <span>Auto-Pilot: Active (12h • &le;7d)</span>
+          </div>
+
+          <!-- MASTER 1-CLICK AUTOPILOT BUTTON -->
+          <button class="btn btn-primary btn-sm" id="btn-master-autopilot" title="1-Click Master Pipeline: Clean Expired + Auto-Discover Fresh (<=7d) + Groq ATS Score" style="background: linear-gradient(135deg, #6366f1 0%, #10b981 100%); border: none; box-shadow: 0 0 16px rgba(99, 102, 241, 0.45); font-weight: 700;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Auto-Pilot Pipeline</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" id="btn-sync-all" title="Refresh Live Data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            <span>Sync</span>
+          </button>
+
+          <button class="btn btn-secondary btn-sm" id="btn-batch-eval" title="Score Unscored Listings with Groq AI">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>Batch Eval</span>
+          </button>
+
+          <button class="btn btn-outline-danger btn-sm" id="btn-purge-dummy" title="Wipe out all dummy/test data and reset database to clean slate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 13px; height: 13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Purge Data</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Content View -->
+      <div class="workspace-content">
+
+        <!-- TAB 1: JOB RADAR VIEW -->
+        <div class="tab-pane active" id="tab-radar">
+
+          <!-- Key Metrics Ribbon -->
+          <section class="metrics-ribbon">
+            <div class="metric-card indigo">
+              <div class="metric-data">
+                <h4>Pipeline Volume</h4>
+                <div class="metric-number" id="kpi-total">0</div>
+                <div class="metric-sub">Active job listings indexed</div>
+              </div>
+              <div class="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+              </div>
+            </div>
+
+            <div class="metric-card cyan">
+              <div class="metric-data">
+                <h4>Evaluated Fit</h4>
+                <div class="metric-number" id="kpi-evaluated">0</div>
+                <div class="metric-sub" id="kpi-eval-sub">0 unscored remaining</div>
+              </div>
+              <div class="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+
+            <div class="metric-card emerald">
+              <div class="metric-data">
+                <h4>Target Matches (≥80%)</h4>
+                <div class="metric-number" id="kpi-high-matches">0</div>
+                <div class="metric-sub">High qualification alignment</div>
+              </div>
+              <div class="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+            </div>
+
+            <div class="metric-card amber">
+              <div class="metric-data">
+                <h4>Submissions</h4>
+                <div class="metric-number" id="kpi-applied">0</div>
+                <div class="metric-sub">Completed application flows</div>
+              </div>
+              <div class="metric-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==============================================================
+               AUTONOMOUS MISSION CONTROL & PREFERENCES HUB (USER CONTROL CENTER)
+               ============================================================== -->
+          <section class="mission-control-panel" id="mission-control-panel">
+            <div class="mission-control-header">
+              <div class="mission-title-group">
+                <h3>
+                  <span>🎯 Autonomous Job Radar Control</span>
+                  <span class="mission-bn-tag">Search Preferences &amp; Execution Hub</span>
+                </h3>
+                <p class="mission-subtitle">
+                  Configure your target job roles and locations below. Trigger <strong>Instant Run</strong> to discover and evaluate live jobs immediately, or let the autonomous <strong>Daily Auto-Pilot</strong> run scheduled scans every morning.
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                  ● Zero Dummy Data
+                </span>
+                <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3);">
+                  ⚡ Groq LPU (~16ms)
+                </span>
+              </div>
+            </div>
+
+            <!-- Form Inputs: Roles, Locations, Freshness, Mobility -->
+            <div class="mission-inputs-grid">
+              <!-- Input 1: Roles -->
+              <div class="mission-input-card">
+                <label for="mission-input-roles">
+                  <span>💼 Target Roles (Job Titles)</span>
+                </label>
+                <input type="text" id="mission-input-roles" class="mission-input-field" placeholder="e.g. Software Engineer, AI Engineer, Full Stack, Python" value="Full Stack Engineer, AI Engineer, Software Engineer, Python Developer">
+                <span class="input-hint">Comma-separated priority job titles to search for</span>
+              </div>
+
+              <!-- Input 2: Locations -->
+              <div class="mission-input-card">
+                <label for="mission-input-locations">
+                  <span>📍 Target Locations &amp; Regions</span>
+                </label>
+                <input type="text" id="mission-input-locations" class="mission-input-field" placeholder="e.g. Bangladesh, Dhaka, Remote, Worldwide" value="Bangladesh, Dhaka, Remote, Worldwide">
+                <span class="input-hint">Target locations (e.g. Bangladesh on-site or Remote worldwide)</span>
+              </div>
+
+              <!-- Input 3: Freshness Filter -->
+              <div class="mission-input-card">
+                <label for="mission-select-freshness">
+                  <span>⏳ Freshness Window</span>
+                </label>
+                <select id="mission-select-freshness" class="mission-input-field" style="cursor: pointer;">
+                  <option value="7" selected>&le; 7 Days (Fresh Postings - Recommended)</option>
+                  <option value="3">&le; 3 Days (Ultra Fresh Only)</option>
+                  <option value="1">&le; 24 Hours (Today Only)</option>
+                  <option value="14">&le; 14 Days</option>
+                </select>
+                <span class="input-hint">Expired or dead listings are automatically filtered out</span>
+              </div>
+
+              <!-- Input 4: Mobility & Visa Policy -->
+              <div class="mission-input-card">
+                <label>
+                  <span>✈️ Workplace &amp; Visa Policy</span>
+                </label>
+                <div class="mission-mobility-pills">
+                  <label class="mobility-checkbox-label">
+                    <input type="checkbox" id="mission-chk-remote" checked>
+                    <span>🌐 Remote Worldwide</span>
+                  </label>
+                  <label class="mobility-checkbox-label">
+                    <input type="checkbox" id="mission-chk-bd" checked>
+                    <span>🇧🇩 Bangladesh On-Site / Hybrid</span>
+                  </label>
+                  <label class="mobility-checkbox-label">
+                    <input type="checkbox" id="mission-chk-visa" checked>
+                    <span>✈️ Foreign with Visa Sponsorship</span>
+                  </label>
+                </div>
+                <span class="input-hint">Foreign roles without visa support trigger auto-SKIP</span>
+              </div>
+            </div>
+
+            <!-- Action Bar: Save + 2 Modes (Instant & Daily) -->
+            <div class="mission-actions-bar">
+              <div class="actions-left-group">
+                <button class="btn btn-secondary btn-sm" id="btn-mission-save-pref">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 13px; height: 13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Save Preferences</span>
+                </button>
+                <span id="mission-save-feedback" style="font-size: 0.74rem; color: #34d399; font-weight: 600; display: none;">✓ Saved</span>
+              </div>
+
+              <div class="actions-right-group">
+                <!-- Mode 1: Instant Run Now -->
+                <button class="btn-instant-master" id="btn-mission-instant-run" title="Immediately crawls live web feeds and computes Groq AI fit scores">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 16px; height: 16px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>⚡ Instant Run Now</span>
+                </button>
+
+                <!-- Mode 2: Daily Auto-Pilot Beacon -->
+                <div class="daily-daemon-card" title="Autonomous background scheduler runs every 12 hours">
+                  <span class="autopilot-pulse-dot" style="width: 10px; height: 10px;"></span>
+                  <div class="daemon-text">
+                    <span class="daemon-title">⏰ Daily Auto-Pilot: ACTIVE</span>
+                    <span class="daemon-sub">Runs scheduled autonomous cycles in background (12h)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual 3-Step Guide Strip -->
+            <div class="mission-guide-strip">
+              <div class="guide-step-card">
+                <div class="guide-step-badge">1</div>
+                <div class="guide-step-content">
+                  <strong>Set Search Preferences:</strong>
+                  Enter your priority roles and locations in the fields above, then click <em>"Save Preferences"</em>.
+                </div>
+              </div>
+
+              <div class="guide-step-card">
+                <div class="guide-step-badge">2</div>
+                <div class="guide-step-content">
+                  <strong>Instant Search Run:</strong>
+                  Click <em>"⚡ Instant Run Now"</em> to query live worldwide feeds and compute ATS fit scores immediately.
+                </div>
+              </div>
+
+              <div class="guide-step-card">
+                <div class="guide-step-badge">3</div>
+                <div class="guide-step-content">
+                  <strong>Daily Autonomous Auto-Pilot:</strong>
+                  Zero manual intervention required. The background daemon runs every morning, keeping fresh jobs and purging expired ones.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Filter Controls -->
+          <div class="filter-bar">
+            <div class="filter-pills">
+              <button class="filter-pill active" data-filter-score="">All Listings</button>
+              <button class="filter-pill" data-filter-score="high">Top Fit (≥80%)</button>
+              <button class="filter-pill" data-filter-score="mid">Mid Match (60-79%)</button>
+              <button class="filter-pill" data-filter-score="unscored">Pending Evaluation</button>
+            </div>
+
+            <div style="display: flex; gap: 0.65rem; align-items: center;">
+              <!-- View Switcher -->
+              <div class="view-segmented-control">
+                <button class="view-toggle-btn active" id="btn-view-list" onclick="setMasterView('list')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  <span>List</span>
+                </button>
+                <button class="view-toggle-btn" id="btn-view-kanban" onclick="setMasterView('kanban')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                  <span>Kanban</span>
+                </button>
+              </div>
+
+              <select class="select-clean" id="filter-ats-source">
+                <option value="">All ATS Platforms</option>
+                <option value="greenhouse">Greenhouse</option>
+                <option value="lever">Lever</option>
+                <option value="ashby">Ashby</option>
+                <option value="workday">Workday</option>
+                <option value="linkedin">LinkedIn</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Master Data Grid (List View) -->
+          <div class="table-panel" id="table-view-panel">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 34%;">Role & Company</th>
+                  <th style="width: 14%;">ATS Source</th>
+                  <th style="width: 16%;">Location</th>
+                  <th style="width: 16%;">Match Rating</th>
+                  <th style="width: 10%;">Stage</th>
+                  <th style="text-align: right; width: 10%;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="jobs-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                    Syncing job database...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Interactive Kanban Pipeline Board -->
+          <div class="kanban-board-container" id="kanban-container">
+            <!-- 1. Discovered Queue -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-discovered"></span>
+                  <span>Discovered</span>
+                </div>
+                <span class="kanban-col-count" id="kanban-count-discovered">0</span>
+              </div>
+              <div class="kanban-cards-list" id="kanban-list-discovered"></div>
+            </div>
+
+            <!-- 2. High Match Fit -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-highfit"></span>
+                  <span>Target Fit (&ge;80%)</span>
+                </div>
+                <span class="kanban-col-count" id="kanban-count-highfit">0</span>
+              </div>
+              <div class="kanban-cards-list" id="kanban-list-highfit"></div>
+            </div>
+
+            <!-- 3. Review & Dry Run -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-review"></span>
+                  <span>Review / Dry-Run</span>
+                </div>
+                <span class="kanban-col-count" id="kanban-count-review">0</span>
+              </div>
+              <div class="kanban-cards-list" id="kanban-list-review"></div>
+            </div>
+
+            <!-- 4. Submissions -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-applied"></span>
+                  <span>Submitted</span>
+                </div>
+                <span class="kanban-col-count" id="kanban-count-applied">0</span>
+              </div>
+              <div class="kanban-cards-list" id="kanban-list-applied"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: FULL PIPELINE KANBAN VIEW -->
+        <div class="tab-pane" id="tab-kanban">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em;">Autonomous Opportunity Pipeline</h2>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Visual lifecycle tracker: Discovered &rarr; Groq AI Evaluated &rarr; Dry-Run Verified &rarr; Live Submissions.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary btn-sm" onclick="renderKanbanBoard()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                <span>Refresh Board</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="kanban-board-container active" id="full-kanban-container" style="display: grid;">
+            <!-- 1. Discovered Queue -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-discovered"></span>
+                  <span>Discovered</span>
+                </div>
+                <span class="kanban-col-count" id="fkanban-count-discovered">0</span>
+              </div>
+              <div class="kanban-cards-list" id="fkanban-list-discovered"></div>
+            </div>
+
+            <!-- 2. High Match Fit -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-highfit"></span>
+                  <span>Target Fit (&ge;80%)</span>
+                </div>
+                <span class="kanban-col-count" id="fkanban-count-highfit">0</span>
+              </div>
+              <div class="kanban-cards-list" id="fkanban-list-highfit"></div>
+            </div>
+
+            <!-- 3. Review & Dry Run -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-review"></span>
+                  <span>Review / Dry-Run</span>
+                </div>
+                <span class="kanban-col-count" id="fkanban-count-review">0</span>
+              </div>
+              <div class="kanban-cards-list" id="fkanban-list-review"></div>
+            </div>
+
+            <!-- 4. Submissions -->
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-col-indicator col-applied"></span>
+                  <span>Submitted</span>
+                </div>
+                <span class="kanban-col-count" id="fkanban-count-applied">0</span>
+              </div>
+              <div class="kanban-cards-list" id="fkanban-list-applied"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: AI COVER LETTER STUDIO -->
+        <div class="tab-pane" id="tab-letters">
+          <div class="studio-layout">
+            <!-- Left Config Panel -->
+            <div class="studio-panel">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size: 1.05rem; font-weight: 700;">AI Tailor Config</h3>
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Groq Cloud AI</span>
+              </div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+                Select a target job and generation persona. Groq Llama-3.3 synthesizes a tailored cover letter matching candidate strengths directly to required skills.
+              </p>
+
+              <div>
+                <label class="section-label">Select Target Job</label>
+                <select class="select-clean" id="studio-job-select" style="width: 100%; margin-top: 0.35rem; padding: 0.55rem 0.75rem;">
+                  <option value="">Choose a job from radar...</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="section-label">Generation Persona & Tone</label>
+                <div class="tone-selector-chips" style="margin-top: 0.4rem;">
+                  <button class="tone-chip active" data-tone="technical">Impactful Tech Lead</button>
+                  <button class="tone-chip" data-tone="solutions">Pragmatic Problem Solver</button>
+                  <button class="tone-chip" data-tone="startup">Startup & High Energy</button>
+                  <button class="tone-chip" data-tone="executive">Senior / Leadership</button>
+                </div>
+              </div>
+
+              <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.6rem;">
+                <button class="btn btn-primary" id="btn-studio-generate" style="width: 100%; justify-content: center; padding: 0.65rem;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Synthesize Cover Letter (Groq)</span>
+                </button>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn btn-secondary btn-sm" id="btn-studio-copy" style="flex: 1; justify-content: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    <span>Copy Markdown</span>
+                  </button>
+                  <button class="btn btn-secondary btn-sm" id="btn-studio-download" style="flex: 1; justify-content: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Download TXT</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Live Preview/Editor -->
+            <div class="studio-editor-panel">
+              <div class="studio-editor-header">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 0.82rem; font-weight: 700; color: #fff;" id="studio-doc-title">Target: Select Job</span>
+                  <span class="badge" id="studio-status-badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc;">Draft Ready</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-faint); font-family: 'JetBrains Mono', monospace;" id="studio-word-count">0 words</span>
+              </div>
+              <textarea class="studio-textarea" id="studio-letter-content" placeholder="Click 'Synthesize Cover Letter' or select a job to tailor a bespoke application letter with Groq Cloud AI..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: LIVE AGENT CONSOLE VIEW -->
+        <div class="tab-pane" id="tab-terminal">
+          <div class="terminal-container">
+            <div class="terminal-toolbar">
+              <div class="terminal-indicator">
+                <span class="status-dot-pulse"></span>
+                <span>telemetry.agent.stream — websocket:8000</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-clear-terminal">Clear Stream</button>
+            </div>
+            <div class="terminal-output" id="terminal-output">
+              <div class="t-line"><span class="t-time">[SYSTEM]</span> <span class="t-info">Platform operational. Listening for crawler, evaluation, and automation events.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: ATS CRAWLERS HUB VIEW -->
+        <div class="tab-pane" id="tab-crawlers">
+          
+          <!-- Autonomous Multi-Channel Discovery Card -->
+          <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+              <div style="max-width: 620px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                  <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.4);">
+                    Zero Manual Links Required
+                  </span>
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    Autonomous Web Discovery
+                  </span>
+                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">Autonomous Multi-Channel Web Job Discovery</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.45;">
+                  Autonomously queries public networks, LinkedIn guest feeds, Arbeitnow (Visa Sponsorship), and global remote feeds. Discovers postings matching your target roles across Bangladesh (Dhaka) and worldwide remote.
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.6rem; align-items: center;">
+                <input type="text" id="input-discover-location" class="select-clean" value="Bangladesh, Dhaka, Remote" style="width: 220px; padding: 0.55rem 0.75rem;" placeholder="Locations...">
+                <button class="btn btn-primary" id="btn-run-auto-discover" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Launch Discovery</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 0.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700;">Direct ATS Ingestion Engine</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">
+              Scrapes unpaginated public boards directly via REST endpoints. Select a preset target or enter an enterprise board token.
+            </p>
+          </div>
+
+          <div class="crawler-cards-grid">
+            <!-- Greenhouse -->
+            <div class="ats-card">
+              <div class="ats-card-header">
+                <div class="ats-brand">
+                  <span class="badge badge-greenhouse">Greenhouse</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Direct JSON</span>
+              </div>
+              <div class="ats-targets-row">
+                <button class="chip-btn" onclick="executeCrawl('greenhouse', 'stripe')">Stripe</button>
+                <button class="chip-btn" onclick="executeCrawl('greenhouse', 'figma')">Figma</button>
+                <button class="chip-btn" onclick="executeCrawl('greenhouse', 'anthropic')">Anthropic</button>
+                <button class="chip-btn" onclick="executeCrawl('greenhouse', 'scaleai')">Scale AI</button>
+                <button class="chip-btn" onclick="executeCrawl('greenhouse', 'discord')">Discord</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <input type="text" id="input-custom-gh" class="select-clean" placeholder="Custom token (e.g. airbnb)" style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" onclick="executeCustom('greenhouse', 'input-custom-gh')">Ingest</button>
+              </div>
+            </div>
+
+            <!-- Ashby -->
+            <div class="ats-card">
+              <div class="ats-card-header">
+                <div class="ats-brand">
+                  <span class="badge badge-ashby">Ashby HQ</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Posting API</span>
+              </div>
+              <div class="ats-targets-row">
+                <button class="chip-btn" onclick="executeCrawl('ashby', 'cursor')">Cursor</button>
+                <button class="chip-btn" onclick="executeCrawl('ashby', 'openai')">OpenAI</button>
+                <button class="chip-btn" onclick="executeCrawl('ashby', 'retool')">Retool</button>
+                <button class="chip-btn" onclick="executeCrawl('ashby', 'ramp')">Ramp</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <input type="text" id="input-custom-ashby" class="select-clean" placeholder="Custom token (e.g. retool)" style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" onclick="executeCustom('ashby', 'input-custom-ashby')">Ingest</button>
+              </div>
+            </div>
+
+            <!-- Lever -->
+            <div class="ats-card">
+              <div class="ats-card-header">
+                <div class="ats-brand">
+                  <span class="badge badge-lever">Lever</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Public Postings</span>
+              </div>
+              <div class="ats-targets-row">
+                <button class="chip-btn" onclick="executeCrawl('lever', 'spotify')">Spotify</button>
+                <button class="chip-btn" onclick="executeCrawl('lever', 'netflix')">Netflix</button>
+                <button class="chip-btn" onclick="executeCrawl('lever', 'palantir')">Palantir</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <input type="text" id="input-custom-lever" class="select-clean" placeholder="Custom token (e.g. spotify)" style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" onclick="executeCustom('lever', 'input-custom-lever')">Ingest</button>
+              </div>
+            </div>
+
+            <!-- LinkedIn -->
+            <div class="ats-card">
+              <div class="ats-card-header">
+                <div class="ats-brand">
+                  <span class="badge badge-linkedin">LinkedIn Jobs</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Search Query</span>
+              </div>
+              <div class="ats-targets-row">
+                <button class="chip-btn" onclick="executeCrawl('linkedin', 'AI Engineer')">AI Engineer</button>
+                <button class="chip-btn" onclick="executeCrawl('linkedin', 'Full Stack Engineer')">Full Stack</button>
+                <button class="chip-btn" onclick="executeCrawl('linkedin', 'Python Developer')">Python</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <input type="text" id="input-custom-linkedin" class="select-clean" placeholder="Keywords (e.g. React Lead)" style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" onclick="executeCustom('linkedin', 'input-custom-linkedin')">Search</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CANDIDATE PROFILE VIEW -->
+        <div class="tab-pane" id="tab-profile">
+          <!-- 1-Click Resume Upload & Auto AI JSON Generator -->
+          <div class="resume-upload-card" id="resume-upload-card">
+            <div class="upload-dropzone" id="resume-dropzone">
+              <div class="dropzone-left-group">
+                <div class="dropzone-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                </div>
+                <div class="dropzone-text">
+                  <h4>Auto-Generate Profile from Resume / CV (PDF, DOCX, TXT)</h4>
+                  <p>Upload your existing resume to automatically parse skills, experience, and generate your candidate JSON schema.</p>
+                  <span class="file-spec-hint">Supports PDF, DOCX, and TXT files • Powered by Groq Cloud AI (~16ms)</span>
+                </div>
+              </div>
+              <input type="file" id="input-resume-file" accept=".pdf,.docx,.doc,.txt,.md" style="display: none;">
+              <button class="btn btn-secondary btn-sm" id="btn-browse-resume" type="button" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                <span>Upload PDF Resume</span>
+              </button>
+            </div>
+
+            <div class="upload-status-row" id="upload-status-row" style="display: none;">
+              <div class="file-info-badge">
+                <span>📄</span>
+                <span id="uploaded-filename">resume.pdf</span>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-parse-resume-ai" style="background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); border: none; font-weight: 700;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Extract &amp; Auto-Generate Profile JSON</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Visual Profile Card -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                  <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    Profile &amp; Resume Information
+                  </span>
+                  <span class="mission-bn-tag" style="font-size: 0.75rem; color: #a5b4fc;">Candidate Attributes &amp; Skills</span>
+                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">Candidate Visual Profile</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  Configure your personal identity, professional title, technical stack, and location. Groq AI evaluates job listings and answers screening questions strictly against this profile.
+                </p>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-save-visual-profile">
+                <span>Save Profile Info</span>
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Full Name</label>
+                <input type="text" id="vis-cand-name" class="mission-input-field" placeholder="e.g. Alex Rivera" value="">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Professional Title / Headline</label>
+                <input type="text" id="vis-cand-title" class="mission-input-field" placeholder="e.g. Full-Stack AI Engineer & Distributed Systems Developer" value="">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Email Address</label>
+                <input type="email" id="vis-cand-email" class="mission-input-field" placeholder="e.g. candidate@example.com" value="">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Location (City, Country)</label>
+                <input type="text" id="vis-cand-location" class="mission-input-field" placeholder="e.g. San Francisco, United States" value="">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Core Skills &amp; Tech Stack (Comma-separated)</label>
+              <input type="text" id="vis-cand-skills" class="mission-input-field" placeholder="Python, FastAPI, TypeScript, React, Next.js, Docker, PostgreSQL, LLMs" value="Python, TypeScript, JavaScript, Go, FastAPI, Django, React, Next.js, Docker, LLMs, LangChain">
+            </div>
+
+            <div>
+              <label style="font-size: 0.75rem; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 0.3rem;">Professional Summary &amp; Bio</label>
+              <textarea id="vis-cand-summary" class="mission-input-field" style="height: 75px; resize: vertical; line-height: 1.45;">Full-Stack AI Engineer with 5+ years of experience architecting scalable backend APIs, multi-agent AI automation pipelines, and high-performance React/Next.js interfaces. Proficient in Python, TypeScript, Docker, and fine-tuning/deploying LLMs.</textarea>
+            </div>
+          </div>
+
+          <!-- Advanced Raw YAML Schema Editor -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">Advanced Candidate Schema (Raw JSON/YAML)</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                  The ATS Evaluator &amp; Answer Agents evaluate job fit and answer screening questions strictly against this profile.
+                </p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-save-profile">Save Raw JSON</button>
+            </div>
+            <textarea id="profile-editor" style="width: 100%; height: 420px; background: #06090e; color: #a5b4fc; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); outline: none; line-height: 1.5;"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 5: LLM CONFIG & MOBILITY POLICY VIEW -->
+        <div class="tab-pane" id="tab-settings">
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; max-width: 1100px;">
+            
+            <!-- Inference Engine Card -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.75rem; display: flex; flex-direction: column; gap: 1.25rem;">
+              <div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <h3 style="font-size: 1.1rem; font-weight: 700;">Inference Engine & Model Routing</h3>
+                  <span class="badge" id="setting-provider-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    Groq Cloud Recommended
+                  </span>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.4;">
+                  Switch between Groq Cloud (Free LPU, ~500 tok/sec, 0% Mac CPU/heat) or local/commercial providers. Real APIs with zero mock data.
+                </p>
+              </div>
+
+              <!-- Active Provider Select -->
+              <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                <label class="section-label">Active Provider</label>
+                <select class="select-clean" id="setting-provider" style="width: 100%; padding: 0.6rem;">
+                  <option value="groq" selected>Groq Cloud (Free LPU - Zero Mac Heat &amp; 500 t/s)</option>
+                  <option value="openai">OpenAI (GPT-4o / GPT-4o-mini / o3-mini)</option>
+                  <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku)</option>
+                  <option value="gemini">Google Gemini (Gemini 2.0 Flash / Pro)</option>
+                  <option value="deepseek">DeepSeek API (DeepSeek-V3 / DeepSeek-R1)</option>
+                  <option value="openrouter">OpenRouter (200+ Multi-Model Gateway)</option>
+                  <option value="ollama">Ollama (Local Private - High Mac CPU/RAM)</option>
+                </select>
+              </div>
+
+              <!-- Model Identifier & Clickable Presets -->
+              <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                <label class="section-label">Model Identifier</label>
+                <input type="text" id="setting-model" class="select-clean" value="llama-3.3-70b-versatile" style="width: 100%; padding: 0.6rem;">
+                <div id="setting-model-presets" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem;">
+                  <!-- Dynamic Presets Populated via JS -->
+                </div>
+              </div>
+
+              <!-- Provider API Key Group (Dynamic for Groq, OpenAI, Anthropic, Gemini, DeepSeek, OpenRouter) -->
+              <div style="display: flex; flex-direction: column; gap: 0.35rem;" id="provider-key-group">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <label class="section-label" id="setting-key-label">Groq API Key</label>
+                  <a href="https://console.groq.com/keys" target="_blank" id="setting-portal-link" style="font-size: 0.74rem; color: var(--accent-indigo); text-decoration: none;">Get Free Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="password" id="setting-api-key" class="select-clean" placeholder="Enter API key..." style="width: 100%; padding: 0.6rem;">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-key-visibility" title="Show/Hide API Key" style="padding: 0.55rem 0.75rem;">👁</button>
+                </div>
+                <span id="setting-key-status" style="font-size: 0.72rem; color: var(--text-muted);">Loaded from secrets.yaml</span>
+              </div>
+
+              <!-- Ollama Host Group (Visible when Ollama is selected) -->
+              <div style="display: none; flex-direction: column; gap: 0.35rem;" id="ollama-host-group">
+                <label class="section-label">Ollama Host Base URL</label>
+                <input type="text" id="setting-host" class="select-clean" value="http://localhost:11434" style="width: 100%; padding: 0.6rem;">
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Ensure Ollama daemon is running locally (`ollama serve`).</span>
+              </div>
+
+              <!-- Test Connection Result Live Banner -->
+              <div id="test-connection-result" style="display: none; padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; line-height: 1.4;"></div>
+
+              <!-- Action Buttons: Test Connection & Apply -->
+              <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem;">
+                <button class="btn btn-secondary" id="btn-test-connection" type="button" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Test Connection</span>
+                </button>
+                <button class="btn btn-primary" id="btn-save-settings" type="button" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span>Apply Configuration</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Candidate Mobility & Workplace Policy Card -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem;">
+              <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700;">Candidate Mobility &amp; Location Rules</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.4;">
+                  Configured dynamically via <code style="color: #a5b4fc;">config.yaml</code>. Zero hardcoding.
+                </p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: #080d16; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                  <div style="color: #34d399; font-weight: 700; font-size: 1rem;">✓</div>
+                  <div>
+                    <div style="font-size: 0.84rem; font-weight: 600; color: #fff;">100% Worldwide Remote</div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted);">Accepted from any global employer (US, EU, Worldwide).</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: #080d16; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                  <div style="color: #34d399; font-weight: 700; font-size: 1rem;">✓</div>
+                  <div>
+                    <div style="font-size: 0.84rem; font-weight: 600; color: #fff;">Home Country On-Site (<span id="mobility-home-country">Bangladesh</span>)</div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted);">On-site and hybrid roles located inside home country are fully accepted.</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: #080d16; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                  <div style="color: #60a5fa; font-weight: 700; font-size: 1rem;">✈</div>
+                  <div>
+                    <div style="font-size: 0.84rem; font-weight: 600; color: #fff;">Foreign On-Site + Visa Sponsorship</div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted);">Accepted ONLY if company explicitly provides visa sponsorship or relocation assistance.</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: #160a0a; border-radius: var(--radius-md); border: 1px solid rgba(239, 68, 68, 0.2);">
+                  <div style="color: #ef4444; font-weight: 700; font-size: 1rem;">✕</div>
+                  <div>
+                    <div style="font-size: 0.84rem; font-weight: 600; color: #fca5a5;">Dealbreaker: Foreign On-Site without Visa</div>
+                    <div style="font-size: 0.76rem; color: #f87171;">Automatically triggers SKIP verdict. No wasted applications.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ==============================================================
+         RIGHT SLIDE-OVER INSPECTOR DRAWER (Linear / GitHub Style)
+         ============================================================== -->
+    <aside class="inspector-drawer" id="inspector-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <span class="badge" id="drawer-source-badge">Greenhouse</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="drawer-location">Remote</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-close-drawer" style="padding: 0.2rem 0.5rem;">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        
+        <!-- Job Title & Company -->
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff; line-height: 1.3;" id="drawer-job-title">
+            Select a job to inspect
+          </h2>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.35rem;">
+            <span style="font-size: 0.84rem; color: var(--text-secondary); font-weight: 500;" id="drawer-job-company">
+              Company Name
+            </span>
+            <a href="#" target="_blank" id="drawer-external-link" style="font-size: 0.76rem; color: var(--accent-indigo); text-decoration: none; font-weight: 600;">
+              Open Original Posting ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- ATS Evaluation Score Card -->
+        <div class="drawer-section">
+          <div class="section-label">ATS Fit Assessment</div>
+          <div class="score-overview-card" id="drawer-score-card">
+            <div class="gauge-circle" id="drawer-gauge">--</div>
+            <div>
+              <div class="verdict-badge" id="drawer-verdict">PENDING EVALUATION</div>
+              <div class="verdict-rationale" id="drawer-rationale">
+                Run evaluation to assess technical stack overlap, dealbreakers, and qualification fit.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Strengths -->
+        <div class="drawer-section">
+          <div class="section-label">Key Strengths & Overlap</div>
+          <ul class="strengths-list" id="drawer-strengths">
+            <li>Awaiting evaluation</li>
+          </ul>
+        </div>
+
+        <!-- Identified Skill Gaps -->
+        <div class="drawer-section">
+          <div class="section-label">Gaps or Considerations</div>
+          <ul class="gaps-list" id="drawer-gaps">
+            <li>None detected</li>
+          </ul>
+        </div>
+
+        <!-- AI Cover Letter Studio -->
+        <div class="drawer-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-label">Tailored Cover Letter</div>
+            <button class="btn btn-secondary btn-sm" id="btn-generate-letter">Draft Letter</button>
+          </div>
+          <pre class="cover-letter-pre" id="drawer-cover-letter">Click 'Draft Letter' to generate a targeted letter aligned with this job.</pre>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn btn-secondary" style="flex: 1;" id="btn-drawer-dry-run">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Dry-Run Apply</span>
+        </button>
+        <button class="btn btn-primary" style="flex: 1;" id="btn-drawer-live-apply">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          <span>Direct Apply</span>
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

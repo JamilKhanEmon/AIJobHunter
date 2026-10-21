@@ -1,0 +1,34 @@
+# Environment and Secrets
+config/secrets.yaml
+.env
+.env.*
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Data & Chrome Profiles
+data/chrome_profile/
+data/screenshots/
+data/*.db
+data/*.sqlite
+data/*.pdf
+data/resume.txt
+
+# OS & Editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace

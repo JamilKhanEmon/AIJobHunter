@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Multi-Agent Application Core (FastAPI Backend + Modern Frontend Dashboard)
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: jobhunter_app
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://jobhunter:hunterpassword@db:5432/jobhunter_db
+      - OLLAMA_HOST=http://ollama:11434
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=llama3.3
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # PostgreSQL Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: jobhunter_db
+    environment:
+      - POSTGRES_USER=jobhunter
+      - POSTGRES_PASSWORD=hunterpassword
+      - POSTGRES_DB=jobhunter_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Local Private LLM Engine (Optional: run Ollama inside docker)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jobhunter_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  ollama_models:

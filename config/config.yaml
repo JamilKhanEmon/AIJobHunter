@@ -1,0 +1,86 @@
+app:
+  name: AI Multi-Agent Job Hunter
+  version: 1.0.0
+  env: development
+  port: 8000
+  host: 0.0.0.0
+search_preferences:
+  positions:
+  - Full Stack Engineer
+  - AI Engineer
+  - Software Engineer
+  - Python Developer
+  - Backend Engineer
+  locations:
+  - Remote
+  - Bangladesh
+  - Worldwide
+  remote_only: false
+  workplace_types:
+  - remote
+  - on_site
+  - hybrid
+  experience_levels:
+  - mid_level
+  - senior
+  job_types:
+  - full_time
+  - contract
+  date_posted: past_week
+candidate_mobility:
+  home_country: Bangladesh
+  home_city: Dhaka
+  accept_remote_worldwide: true
+  accept_home_country_onsite: true
+  accept_foreign_onsite_with_visa: true
+  reject_foreign_onsite_without_visa: true
+evaluation:
+  min_match_score: 70
+  auto_apply_score_threshold: 85
+  strict_dealbreaker_check: true
+  dealbreakers:
+  - Foreign on-site role without visa sponsorship or relocation assistance
+  - Requires foreign local work authorization or citizenship without offering visa
+    sponsorship
+  - Requires domestic security clearance restricted to foreign citizens
+  - Unpaid internship or equity-only compensation
+  company_blacklist:
+  - Revature
+  - Crossover
+  title_blacklist:
+  - Intern
+  - Unpaid
+  - Volunteer
+ats_targets:
+  greenhouse:
+  - stripe
+  - figma
+  - anthropic
+  - scaleai
+  - discord
+  - airbnb
+  lever:
+  - palantir
+  - spotify
+  - netflix
+  ashby:
+  - retool
+  - openai
+  - ramp
+  - cursor
+ai_router:
+  active_provider: groq
+  model_name: deepseek-r1-distill-llama-70b
+  groq_base_url: https://api.groq.com/openai/v1
+  ollama_base_url: http://localhost:11434
+  temperature: 0.2
+  max_tokens: 2048
+  fallback_to_mock: true
+automation:
+  headless: false
+  slow_mo_ms: 120
+  max_daily_applications: 25
+  cooldown_between_apps_seconds: 45
+  user_data_dir: data/chrome_profile
+  anti_detection: true
+  screenshot_on_error: true
