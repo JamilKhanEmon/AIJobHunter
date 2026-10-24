@@ -73,6 +73,13 @@
           <span>LLM Engine Config</span>
           <span class="nav-counter" style="color: #a78bfa; font-size: 0.68rem; font-weight: 600;">API Keys</span>
         </button>
+
+        <div class="nav-section-title">Account &amp; Access</div>
+        <button class="nav-item" data-tab="tab-auth" id="nav-btn-auth" onclick="switchTab('tab-auth')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span id="nav-auth-label">Sign In / Account</span>
+          <span class="nav-counter" id="nav-auth-badge" style="color: #60a5fa; font-size: 0.68rem; font-weight: 700;">Login</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -986,6 +993,118 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+        <!-- TAB 6: DEDICATED USER ACCOUNT & MULTI-USER LOGIN/LOGOUT VIEW -->
+        <div class="tab-pane" id="tab-auth">
+          <div style="max-width: 800px; margin: 0 auto; padding: 1rem 0;">
+            
+            <!-- VIEW A: LOGGED IN STATE -->
+            <div id="auth-page-logged-in" style="display: none;">
+              <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 1.5rem; text-align: center;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #10b981 100%); display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 1rem; box-shadow: 0 0 25px rgba(99, 102, 241, 0.45);" id="auth-page-avatar">
+                  U
+                </div>
+                <h2 style="font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;" id="auth-page-user-name">User Account</h2>
+                <div style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 1rem;" id="auth-page-user-email">user@example.com</div>
+                
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 999px; padding: 0.35rem 1rem; font-size: 0.8rem; color: #34d399; font-weight: 600; margin-bottom: 1.5rem;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; display: inline-block;"></span>
+                  <span>Active Session (Private CV &amp; Search Filters Active)</span>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                  <button class="btn btn-primary" onclick="switchTab('tab-profile')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span>📄 Manage My CV &amp; Profile ↗</span>
+                  </button>
+                  <button class="btn btn-secondary" onclick="switchTab('tab-settings')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span>🔑 Configure My API Keys ↗</span>
+                  </button>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 1.5rem 0;">
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.82rem; color: var(--text-muted);">Ready to exit your session?</span>
+                  <button class="btn btn-secondary" id="btn-auth-page-logout" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; font-weight: 700; padding: 0.55rem 1.25rem;">
+                    ⎋ Sign Out / Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW B: LOGGED OUT / GUEST STATE (SIGN IN & REGISTER) -->
+            <div id="auth-page-logged-out" style="display: block;">
+              <div style="text-align: center; margin-bottom: 1.75rem;">
+                <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; border-radius: 999px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.75rem;">
+                  🔒 Multi-User Secure Access
+                </div>
+                <h2 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 0.4rem;">Sign In or Create Your Account</h2>
+                <p style="font-size: 0.88rem; color: #94a3b8; max-width: 520px; margin: 0 auto;">
+                  Each user account stores its own private CV, isolated ATS evaluation match history, and optional personal LLM API keys.
+                </p>
+              </div>
+
+              <!-- Main Auth Form Card -->
+              <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2rem; max-width: 480px; margin: 0 auto; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                
+                <!-- Tab Switcher -->
+                <div style="display: flex; background: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 0.25rem; margin-bottom: 1.5rem;">
+                  <button id="auth-page-tab-login" type="button" class="btn" style="flex: 1; font-size: 0.85rem; font-weight: 700; padding: 0.55rem; border-radius: 6px; background: rgba(99, 102, 241, 0.25); color: #fff; border: 1px solid rgba(99, 102, 241, 0.5);">
+                    Sign In
+                  </button>
+                  <button id="auth-page-tab-register" type="button" class="btn" style="flex: 1; font-size: 0.85rem; font-weight: 700; padding: 0.55rem; border-radius: 6px; background: transparent; color: #94a3b8; border: none;">
+                    Create Account
+                  </button>
+                </div>
+
+                <form id="auth-page-form" onsubmit="return false;">
+                  <!-- Full Name (Only for registration) -->
+                  <div id="auth-page-name-group" style="display: none; margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">Full Name</label>
+                    <input type="text" id="auth-page-name-input" placeholder="e.g. Alex Rivera" class="mission-input-field" style="width: 100%; box-sizing: border-box;">
+                  </div>
+
+                  <!-- Email Address -->
+                  <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">Email Address</label>
+                    <input type="email" id="auth-page-email-input" required placeholder="you@example.com" class="mission-input-field" style="width: 100%; box-sizing: border-box;">
+                  </div>
+
+                  <!-- Password -->
+                  <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">Password</label>
+                    <input type="password" id="auth-page-password-input" required placeholder="At least 6 characters" class="mission-input-field" style="width: 100%; box-sizing: border-box;">
+                  </div>
+
+                  <!-- Live Feedback Error / Success -->
+                  <div id="auth-page-feedback" style="display: none; margin-bottom: 1.25rem; padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.82rem; line-height: 1.4;"></div>
+
+                  <button type="submit" id="btn-auth-page-submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: 700; font-size: 0.95rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                    Sign In
+                  </button>
+                </form>
+              </div>
+
+              <!-- Feature Cards -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 2rem;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                  <div style="font-size: 1.25rem; margin-bottom: 0.35rem;">🛡️</div>
+                  <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem;">Isolated Profile</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">Your uploaded CV, contact info, and matches are encrypted &amp; private to you.</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                  <div style="font-size: 1.25rem; margin-bottom: 0.35rem;">🔑</div>
+                  <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem;">Custom API Keys</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">Input your own Groq, Gemini, or OpenAI API key to power your evaluations.</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+                  <div style="font-size: 1.25rem; margin-bottom: 0.35rem;">⚡</div>
+                  <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem;">On-Demand Execution</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">Search runs live when you trigger it. Zero background database bloat.</div>
+                </div>
+              </div>
+
             </div>
 
           </div>

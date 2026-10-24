@@ -155,17 +155,36 @@ window.copyToClipboard = function(text, label, btnElem) {
 };
 
 // Auth State & Controller
+// Auth State & Controller
 async function checkAuthStatus() {
   const token = localStorage.getItem("jobhunter_token");
   const userBadge = document.getElementById("user-badge-name");
   const btnLogout = document.getElementById("btn-user-logout");
   const radarAuthLabel = document.getElementById("radar-auth-label");
+  const pageLoggedIn = document.getElementById("auth-page-logged-in");
+  const pageLoggedOut = document.getElementById("auth-page-logged-out");
+  const pageUserName = document.getElementById("auth-page-user-name");
+  const pageUserEmail = document.getElementById("auth-page-user-email");
+  const pageAvatar = document.getElementById("auth-page-avatar");
+  const navAuthBadge = document.getElementById("nav-auth-badge");
+  const navAuthLabel = document.getElementById("nav-auth-label");
 
-  if (!token) {
+  function renderLoggedOut() {
     AppState.currentUser = null;
     if (userBadge) userBadge.textContent = "Sign In / Register";
     if (radarAuthLabel) radarAuthLabel.textContent = "👤 Guest Mode (Click to Sign In / Multi-User)";
     if (btnLogout) btnLogout.style.display = "none";
+    if (pageLoggedIn) pageLoggedIn.style.display = "none";
+    if (pageLoggedOut) pageLoggedOut.style.display = "block";
+    if (navAuthBadge) {
+      navAuthBadge.textContent = "Login";
+      navAuthBadge.style.color = "#60a5fa";
+    }
+    if (navAuthLabel) navAuthLabel.textContent = "Sign In / Account";
+  }
+
+  if (!token) {
+    renderLoggedOut();
     return null;
   }
 
@@ -175,19 +194,32 @@ async function checkAuthStatus() {
       const data = await res.json();
       AppState.currentUser = data.user;
       const displayName = data.user.full_name || data.user.email.split("@")[0];
+      const initial = (data.user.full_name ? data.user.full_name[0] : data.user.email[0]).toUpperCase();
+
       if (userBadge) userBadge.textContent = displayName;
       if (radarAuthLabel) radarAuthLabel.textContent = `✓ Active User: ${displayName} (Isolated CV & Keys)`;
       if (btnLogout) btnLogout.style.display = "inline-flex";
+
+      if (pageLoggedIn) pageLoggedIn.style.display = "block";
+      if (pageLoggedOut) pageLoggedOut.style.display = "none";
+      if (pageUserName) pageUserName.textContent = data.user.full_name || "Candidate User";
+      if (pageUserEmail) pageUserEmail.textContent = data.user.email;
+      if (pageAvatar) pageAvatar.textContent = initial;
+
+      if (navAuthBadge) {
+        navAuthBadge.textContent = "Online";
+        navAuthBadge.style.color = "#34d399";
+      }
+      if (navAuthLabel) navAuthLabel.textContent = "My Account";
+
       return data.user;
     } else {
       localStorage.removeItem("jobhunter_token");
-      AppState.currentUser = null;
-      if (userBadge) userBadge.textContent = "Sign In / Register";
-      if (radarAuthLabel) radarAuthLabel.textContent = "👤 Guest Mode (Click to Sign In / Multi-User)";
-      if (btnLogout) btnLogout.style.display = "none";
+      renderLoggedOut();
       return null;
     }
   } catch (e) {
+    renderLoggedOut();
     return null;
   }
 }
@@ -204,81 +236,71 @@ function setupAuthUI() {
   const errorMsg = document.getElementById("auth-error-msg");
   const btnLogout = document.getElementById("btn-user-logout");
 
+  // Page-level elements
+  const pageTabLogin = document.getElementById("auth-page-tab-login");
+  const pageTabRegister = document.getElementById("auth-page-tab-register");
+  const pageNameGroup = document.getElementById("auth-page-name-group");
+  const btnPageSubmit = document.getElementById("btn-auth-page-submit");
+  const pageFeedback = document.getElementById("auth-page-feedback");
+  const btnPageLogout = document.getElementById("btn-auth-page-logout");
+
   let isRegisterMode = false;
 
-  function setMode(register) {
+  function setPageMode(register) {
     isRegisterMode = register;
-    if (errorMsg) errorMsg.style.display = "none";
+    if (pageFeedback) pageFeedback.style.display = "none";
     if (register) {
-      if (tabRegister) {
-        tabRegister.style.background = "rgba(99, 102, 241, 0.25)";
-        tabRegister.style.color = "#fff";
-        tabRegister.style.border = "1px solid rgba(99, 102, 241, 0.5)";
+      if (pageTabRegister) {
+        pageTabRegister.style.background = "rgba(99, 102, 241, 0.25)";
+        pageTabRegister.style.color = "#fff";
+        pageTabRegister.style.border = "1px solid rgba(99, 102, 241, 0.5)";
       }
-      if (tabLogin) {
-        tabLogin.style.background = "transparent";
-        tabLogin.style.color = "#94a3b8";
-        tabLogin.style.border = "none";
+      if (pageTabLogin) {
+        pageTabLogin.style.background = "transparent";
+        pageTabLogin.style.color = "#94a3b8";
+        pageTabLogin.style.border = "none";
       }
-      if (nameGroup) nameGroup.style.display = "block";
-      if (modalTitle) modalTitle.textContent = "Create an Account";
-      if (btnSubmit) btnSubmit.textContent = "Sign Up";
+      if (pageNameGroup) pageNameGroup.style.display = "block";
+      if (btnPageSubmit) btnPageSubmit.textContent = "Create Account";
     } else {
-      if (tabLogin) {
-        tabLogin.style.background = "rgba(99, 102, 241, 0.25)";
-        tabLogin.style.color = "#fff";
-        tabLogin.style.border = "1px solid rgba(99, 102, 241, 0.5)";
+      if (pageTabLogin) {
+        pageTabLogin.style.background = "rgba(99, 102, 241, 0.25)";
+        pageTabLogin.style.color = "#fff";
+        pageTabLogin.style.border = "1px solid rgba(99, 102, 241, 0.5)";
       }
-      if (tabRegister) {
-        tabRegister.style.background = "transparent";
-        tabRegister.style.color = "#94a3b8";
-        tabRegister.style.border = "none";
+      if (pageTabRegister) {
+        pageTabRegister.style.background = "transparent";
+        pageTabRegister.style.color = "#94a3b8";
+        pageTabRegister.style.border = "none";
       }
-      if (nameGroup) nameGroup.style.display = "none";
-      if (modalTitle) modalTitle.textContent = "Sign In to AI Job Hunter";
-      if (btnSubmit) btnSubmit.textContent = "Sign In";
+      if (pageNameGroup) pageNameGroup.style.display = "none";
+      if (btnPageSubmit) btnPageSubmit.textContent = "Sign In";
     }
   }
 
-  if (btnOpenModal) {
-    btnOpenModal.addEventListener("click", () => {
-      if (localStorage.getItem("jobhunter_token")) {
-        window.switchTab("tab-profile");
-      } else {
-        setMode(false);
-        if (modalOverlay) modalOverlay.style.display = "flex";
-      }
-    });
-  }
+  if (pageTabLogin) pageTabLogin.addEventListener("click", () => setPageMode(false));
+  if (pageTabRegister) pageTabRegister.addEventListener("click", () => setPageMode(true));
 
-  if (btnCloseModal && modalOverlay) {
-    btnCloseModal.addEventListener("click", () => {
-      modalOverlay.style.display = "none";
-    });
-    modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) modalOverlay.style.display = "none";
-    });
-  }
-
-  if (tabLogin) tabLogin.addEventListener("click", () => setMode(false));
-  if (tabRegister) tabRegister.addEventListener("click", () => setMode(true));
-
-  if (btnSubmit) {
-    btnSubmit.addEventListener("click", async () => {
-      const email = document.getElementById("auth-email-input").value.trim();
-      const password = document.getElementById("auth-password-input").value.trim();
-      const name = document.getElementById("auth-name-input") ? document.getElementById("auth-name-input").value.trim() : "";
+  // Dedicated Page Form Submission
+  if (btnPageSubmit) {
+    btnPageSubmit.addEventListener("click", async () => {
+      const email = document.getElementById("auth-page-email-input")?.value.trim() || "";
+      const password = document.getElementById("auth-page-password-input")?.value.trim() || "";
+      const name = document.getElementById("auth-page-name-input")?.value.trim() || "";
 
       if (!email || !password) {
-        if (errorMsg) {
-          errorMsg.textContent = "Please fill in all required fields.";
-          errorMsg.style.display = "block";
+        if (pageFeedback) {
+          pageFeedback.style.display = "block";
+          pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
+          pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
+          pageFeedback.style.color = "#fca5a5";
+          pageFeedback.textContent = "Please provide both email address and password.";
         }
         return;
       }
 
-      btnSubmit.disabled = true;
-      btnSubmit.textContent = "Processing...";
+      btnPageSubmit.disabled = true;
+      btnPageSubmit.textContent = "Authenticating...";
 
       try {
         const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
@@ -294,25 +316,63 @@ function setupAuthUI() {
 
         if (res.ok && data.access_token) {
           localStorage.setItem("jobhunter_token", data.access_token);
-          if (modalOverlay) modalOverlay.style.display = "none";
+          if (pageFeedback) {
+            pageFeedback.style.display = "block";
+            pageFeedback.style.background = "rgba(16, 185, 129, 0.15)";
+            pageFeedback.style.border = "1px solid rgba(16, 185, 129, 0.35)";
+            pageFeedback.style.color = "#34d399";
+            pageFeedback.textContent = "✓ Authentication successful! Loading your private workspace...";
+          }
           await checkAuthStatus();
           await refreshAllData();
-          appendTerminalLine("AUTH", `Signed in as ${email}`, "success");
+          appendTerminalLine("AUTH", `Signed in successfully as ${email}`, "success");
         } else {
-          if (errorMsg) {
-            errorMsg.textContent = data.detail || "Authentication failed. Please check credentials.";
-            errorMsg.style.display = "block";
+          if (pageFeedback) {
+            pageFeedback.style.display = "block";
+            pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
+            pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
+            pageFeedback.style.color = "#fca5a5";
+            pageFeedback.textContent = data.detail || "Authentication failed. Please verify credentials.";
           }
         }
       } catch (err) {
-        if (errorMsg) {
-          errorMsg.textContent = err.message;
-          errorMsg.style.display = "block";
+        if (pageFeedback) {
+          pageFeedback.style.display = "block";
+          pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
+          pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
+          pageFeedback.style.color = "#fca5a5";
+          pageFeedback.textContent = err.message;
         }
       } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = isRegisterMode ? "Sign Up" : "Sign In";
+        btnPageSubmit.disabled = false;
+        btnPageSubmit.textContent = isRegisterMode ? "Create Account" : "Sign In";
       }
+    });
+  }
+
+  // Logout from Dedicated Page
+  if (btnPageLogout) {
+    btnPageLogout.addEventListener("click", async () => {
+      localStorage.removeItem("jobhunter_token");
+      await checkAuthStatus();
+      await refreshAllData();
+      appendTerminalLine("AUTH", "You have signed out.", "info");
+    });
+  }
+
+  // Header button directly opens dedicated Account tab
+  if (btnOpenModal) {
+    btnOpenModal.addEventListener("click", () => {
+      window.switchTab("tab-auth");
+    });
+  }
+
+  if (btnCloseModal && modalOverlay) {
+    btnCloseModal.addEventListener("click", () => {
+      modalOverlay.style.display = "none";
+    });
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) modalOverlay.style.display = "none";
     });
   }
 
@@ -323,10 +383,9 @@ function setupAuthUI() {
       await refreshAllData();
       appendTerminalLine("AUTH", "You have signed out.", "info");
     });
-  }
 }
 
-// Bootstrap
+// Bootstrap Application
 document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupKeyboardShortcuts();
@@ -351,10 +410,13 @@ window.switchTab = function(tabId) {
   });
   const titleMap = {
     "tab-radar": "Job Radar & Discovery",
+    "tab-kanban": "Pipeline Kanban Board",
+    "tab-letters": "Cover Letter Studio",
     "tab-terminal": "Live Agent Telemetry Stream",
     "tab-crawlers": "ATS Crawlers Ingestion Hub",
     "tab-profile": "Candidate Background Profile",
-    "tab-settings": "Inference Engine & Candidate Mobility"
+    "tab-settings": "Inference Engine & Candidate Mobility",
+    "tab-auth": "User Account & Authentication"
   };
   const hl = document.getElementById("page-headline");
   if (hl && titleMap[tabId]) hl.textContent = titleMap[tabId];
