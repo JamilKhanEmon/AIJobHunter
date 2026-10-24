@@ -1192,17 +1192,34 @@ function renderDataGrid() {
   }).join("");
 }
 
-// Render Job Portal Cards View (LinkedIn / Modern Portal Layout)
+// Toggle Mission Control Collapse
+window.toggleMissionControlCollapse = function() {
+  const panel = document.getElementById("mission-control-panel");
+  if (!panel) return;
+  const isHidden = panel.style.display === "none";
+  panel.style.display = isHidden ? "block" : "none";
+  const btn = document.getElementById("btn-toggle-mission-control");
+  if (btn) {
+    btn.innerHTML = isHidden ? "▲ Close Settings" : "⚙️ Search &amp; Auto-Pilot Settings";
+  }
+};
+
+// Render Job Portal Cards View (NextJobz / Modern Clean Portal Layout)
 function renderJobCards(jobs) {
   const container = document.getElementById("cards-view-panel");
   if (!container) return;
 
+  const countEl = document.getElementById("featured-jobs-count");
+  if (countEl) {
+    countEl.textContent = jobs && jobs.length > 0 ? `${jobs.length} Available` : "0 Available";
+  }
+
   if (!jobs || jobs.length === 0) {
     container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem;">
-        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔍</div>
-        <h3 style="color: #fff; margin-bottom: 0.35rem; font-weight: 700;">No matching vacancies found</h3>
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">Try adjusting your keyword filter or click "Find Jobs" to discover fresh postings.</p>
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;">
+        <div style="font-size: 2.4rem; margin-bottom: 0.5rem;">🔍</div>
+        <h3 style="color: #0f172a; margin-bottom: 0.35rem; font-weight: 800;">No matching vacancies found</h3>
+        <p style="font-size: 0.88rem; color: #64748b; max-width: 480px; margin: 0 auto;">Try adjusting your search keywords, clear category filters, or click "Find Jobs" to fetch live postings across Bdjobs & worldwide platforms.</p>
       </div>
     `;
     return;
@@ -1238,7 +1255,7 @@ function renderJobCards(jobs) {
             <div class="card-company-avatar" style="background: ${getCompanyGradient(job.company)}; color: #fff;">${initial}</div>
             <div class="card-company-info">
               <span class="card-company-name">${escapeHtml(job.company)}</span>
-              <span class="card-company-deadline">${escapeHtml(locText)}</span>
+              <span class="card-company-deadline">📍 ${escapeHtml(locText)}</span>
             </div>
           </div>
           <div class="card-scores-group">
@@ -1251,9 +1268,8 @@ function renderJobCards(jobs) {
 
         <div class="card-badges-row">
           <span class="badge ${sourceClass}">${escapeHtml(job.source || 'bdjobs').toUpperCase()}</span>
-          <span class="card-meta-pill">📍 ${escapeHtml(locText)}</span>
           <span class="card-meta-pill">💰 ${escapeHtml(salaryText)}</span>
-          ${job.remote ? '<span class="card-meta-pill" style="color: #34d399;">🌐 Remote</span>' : '<span class="card-meta-pill">🏢 On-site</span>'}
+          ${job.remote ? '<span class="card-meta-pill" style="color: #059669; font-weight: 700;">🌐 Remote</span>' : '<span class="card-meta-pill">🏢 Bangladesh</span>'}
         </div>
 
         ${matchedChips || missingChips ? `<div class="card-skills-row">${matchedChips}${missingChips}</div>` : ''}
@@ -1261,15 +1277,15 @@ function renderJobCards(jobs) {
         ${rawSnippet ? `<div class="card-snippet">${escapeHtml(rawSnippet)}...</div>` : ''}
 
         <div class="card-footer-row">
-          <span style="font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; color: var(--text-faint);">
-            Stage: ${escapeHtml(stage)}
+          <span style="font-size: 0.74rem; font-weight: 600; color: #64748b;">
+            Stage: <strong style="color: #0f172a;">${escapeHtml(stage)}</strong>
           </span>
           <div class="card-actions-group">
             <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openCoverLetterStudioForJob(${job.id});" title="Generate AI Cover Letter">
               AI Letter
             </button>
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCareerPortal(${job.id});" style="background: linear-gradient(135deg, #2563eb, #4f46e5); border: none;">
-              Apply ↗
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCareerPortal(${job.id});" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; font-weight: 700;">
+              Apply Now ↗
             </button>
           </div>
         </div>
