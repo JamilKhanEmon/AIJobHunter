@@ -21,13 +21,61 @@ class AutonomousDiscoveryEngine:
         Runs multi-channel autonomous web search for target roles and sub-areas.
         Discovers jobs without requiring manual company links.
         """
-        target_roles = roles or settings.target_positions or ["Software Engineer", "AI Engineer", "Full Stack Developer"]
-        target_locations = locations or ["Bangladesh", "Dhaka", "Remote"]
+        prof = settings.get_candidate_profile()
+        headline = (prof.get("personal_information", {}).get("headline") or "").strip()
+        user_country = (prof.get("personal_information", {}).get("country") or "Bangladesh").strip()
+        user_city = (prof.get("personal_information", {}).get("city") or "Dhaka").strip()
+
+        # Dynamic target roles derived from uploaded CV headline + mission preferences
+        dynamic_roles = []
+        if roles:
+            dynamic_roles.extend(roles)
+        elif headline:
+            dynamic_roles.append(headline)
+            # Add complimentary search terms
+            if any(k in headline.lower() for k in ["doctor", "physician", "medical", "surgeon", "clinic", "mbbs"]):
+                dynamic_roles.extend(["Doctor", "Medical Officer", "General Physician"])
+            elif any(k in headline.lower() for k in ["civil", "mechanical", "electrical", "structural", "architect"]):
+                dynamic_roles.extend(["Civil Engineer", "Project Engineer", "Site Engineer"])
+            elif any(k in headline.lower() for k in ["accountant", "audit", "finance", "banking", "tax"]):
+                dynamic_roles.extend(["Accountant", "Senior Accountant", "Financial Analyst"])
+            elif any(k in headline.lower() for k in ["nurse", "nursing"]):
+                dynamic_roles.extend(["Staff Nurse", "Registered Nurse"])
+            elif any(k in headline.lower() for k in ["teacher", "lecturer", "professor", "faculty"]):
+                dynamic_roles.extend(["Lecturer", "Teacher", "Instructor"])
+            elif "ai" in headline.lower() or "machine learning" in headline.lower():
+                dynamic_roles.extend(["AI Engineer", "Machine Learning Engineer"])
+            elif "design" in headline.lower() or "ux" in headline.lower():
+                dynamic_roles.extend(["Product Designer", "UI/UX Designer"])
+            elif "data" in headline.lower() or "analyst" in headline.lower():
+                dynamic_roles.extend(["Data Analyst", "Data Engineer"])
+            elif "full" in headline.lower() or "stack" in headline.lower() or "software" in headline.lower():
+                dynamic_roles.extend(["Full Stack Developer", "Software Engineer"])
+            elif settings.target_positions:
+                dynamic_roles.extend(settings.target_positions)
+        elif settings.target_positions:
+            dynamic_roles.extend(settings.target_positions)
+        else:
+            dynamic_roles.extend(["Software Engineer", "AI Engineer", "Product Designer", "Data Analyst"])
+
+        target_roles = list(dict.fromkeys([r.strip() for r in dynamic_roles if r and r.strip()]))
+
+        # Dynamic target locations (Local candidate home city & country + Remote)
+        dynamic_locs = []
+        if locations:
+            dynamic_locs.extend(locations)
+        else:
+            if user_country:
+                dynamic_locs.append(user_country)
+            if user_city and user_city != user_country:
+                dynamic_locs.append(user_city)
+            dynamic_locs.extend(["Remote", "Worldwide"])
+        target_locations = list(dict.fromkeys([l.strip() for l in dynamic_locs if l and l.strip()]))
 
         discovered_jobs: List[ScrapedJob] = []
         seen_urls = set()
 
-        logger.info(f"Starting Autonomous Discovery for roles: {target_roles} in locations: {target_locations}")
+        logger.info(f"Starting Multi-Profession Autonomous Discovery for roles: {target_roles[:4]} in locations: {target_locations}")
 
         # 1. Multi-location LinkedIn Public Discovery (Bangladesh Sub-areas & Remote)
         for role in target_roles[:3]: # Top 3 active roles
@@ -63,6 +111,28 @@ class AutonomousDiscoveryEngine:
                     discovered_jobs.append(j)
         except Exception as e:
             logger.warning(f"Error querying RemoteOK feed: {e}")
+
+        # 4. Remotive Worldwide Developer Hub
+        try:
+            logger.info("Auto-discovering software engineering roles on Remotive...")
+            remotive_jobs = self._fetch_remotive_jobs(target_roles, limit=limit_per_source)
+            for j in remotive_jobs:
+                if j.url and j.url not in seen_urls:
+                    seen_urls.add(j.url)
+                    discovered_jobs.append(j)
+        except Exception as e:
+            logger.warning(f"Error querying Remotive feed: {e}")
+
+        # 5. Jobicy Global Engineering Feeds
+        try:
+            logger.info("Auto-discovering developer listings on Jobicy...")
+            jobicy_jobs = self._fetch_jobicy_jobs(target_roles, limit=limit_per_source)
+            for j in jobicy_jobs:
+                if j.url and j.url not in seen_urls:
+                    seen_urls.add(j.url)
+                    discovered_jobs.append(j)
+        except Exception as e:
+            logger.warning(f"Error querying Jobicy feed: {e}")
 
         logger.info(f"Autonomous Discovery finished: Found {len(discovered_jobs)} total new jobs.")
         return discovered_jobs
@@ -171,4 +241,103 @@ class AutonomousDiscoveryEngine:
                 ))
                 if len(results) >= limit:
                     break
+        return results
+
+    def _fetch_remotive_jobs(self, target_roles: List[str], limit: int = 20, max_age_days: int = 14) -> List[ScrapedJob]:
+        """Fetches developer and AI roles from Remotive's live public API."""
+        from datetime import datetime
+        url = "https://remotive.com/api/remote-jobs?category=software-dev&limit=40"
+        results = []
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(url)
+                if resp.status_code != 200:
+                    return []
+                data = resp.json().get("jobs", [])
+                for item in data:
+                    raw_date = item.get("publication_date")
+                    if raw_date:
+                        try:
+                            clean_date = raw_date.split("T")[0]
+                            dt = datetime.strptime(clean_date, "%Y-%m-%d")
+                            age_days = (datetime.utcnow() - dt).days
+                            if age_days > max_age_days:
+                                continue
+                        except Exception:
+                            pass
+
+                    title = item.get("title", "")
+                    title_lower = title.lower()
+                    desc = item.get("description", "")
+
+                    matches_role = any(r.lower() in title_lower for r in target_roles) or "engineer" in title_lower or "developer" in title_lower
+                    if not matches_role:
+                        continue
+
+                    candidate_loc = item.get("candidate_required_location", "Worldwide Remote")
+
+                    results.append(ScrapedJob(
+                        title=title,
+                        company=item.get("company_name", "Remote Tech"),
+                        url=item.get("url", ""),
+                        source="remotive",
+                        external_id=str(item.get("id", "")),
+                        location=candidate_loc if candidate_loc else "Worldwide Remote",
+                        remote=True,
+                        ats_type="remotive",
+                        description=desc
+                    ))
+                    if len(results) >= limit:
+                        break
+        except Exception as e:
+            logger.warning(f"Error querying Remotive feed: {e}")
+        return results
+
+    def _fetch_jobicy_jobs(self, target_roles: List[str], limit: int = 20, max_age_days: int = 14) -> List[ScrapedJob]:
+        """Fetches developer and engineering roles from Jobicy's live public API."""
+        from datetime import datetime
+        url = "https://jobicy.com/api/v2/remote-jobs?count=40&tag=dev"
+        results = []
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(url)
+                if resp.status_code != 200:
+                    return []
+                data = resp.json().get("jobs", [])
+                for item in data:
+                    pub_date = item.get("pubDate")
+                    if pub_date:
+                        try:
+                            clean_date = pub_date.split("T")[0].split(" ")[0]
+                            dt = datetime.strptime(clean_date, "%Y-%m-%d")
+                            age_days = (datetime.utcnow() - dt).days
+                            if age_days > max_age_days:
+                                continue
+                        except Exception:
+                            pass
+
+                    title = item.get("jobTitle", "")
+                    title_lower = title.lower()
+                    desc = item.get("jobDescription", "")
+
+                    matches_role = any(r.lower() in title_lower for r in target_roles) or "engineer" in title_lower or "developer" in title_lower
+                    if not matches_role:
+                        continue
+
+                    geo = item.get("jobGeo", "Anywhere")
+                    results.append(ScrapedJob(
+                        title=title,
+                        company=item.get("companyName", "Tech Corp"),
+                        url=item.get("url", ""),
+                        source="jobicy",
+                        external_id=str(item.get("id", "")),
+                        location=f"Remote ({geo})",
+                        remote=True,
+                        ats_type="jobicy",
+                        description=desc
+                    ))
+                    if len(results) >= limit:
+                        break
+        except Exception as e:
+            logger.warning(f"Error querying Jobicy feed: {e}")
         return results

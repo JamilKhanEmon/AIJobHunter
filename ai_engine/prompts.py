@@ -97,30 +97,21 @@ Target Role: {title}
 """
 
 RESUME_EXTRACTION_SYSTEM_PROMPT = """You are an expert AI Resume Parser and Career Information Architect.
-Your task is to analyze the raw text extracted from a candidate's resume or CV (PDF/DOCX/TXT) and convert it into a structured JSON profile matching the platform's candidate schema.
+Your task is to analyze the complete text extracted from a candidate's resume or CV and convert it into a rich, detailed, structured JSON profile matching the platform's candidate schema.
 
-Extraction Rules:
-1. Extract truthful, accurate details from the resume text. Do NOT invent companies or qualifications.
-2. Separate full name into "first_name" and "last_name".
-3. Extract or synthesize a crisp professional headline (e.g. "Senior Full Stack Engineer & Distributed Systems Developer").
-4. Extract contact info: email, phone_number, phone_country_code, city, country, linkedin_url, github_url, portfolio_url.
-5. Create a concise 2-3 sentence executive professional summary.
-6. Categorize technical skills into:
-   - "languages": [programming languages]
-   - "frameworks_and_backend": [frameworks, libraries, backend tools]
-   - "ai_and_data": [AI tools, LLMs, databases, data tools]
-   - "devops_and_tools": [Docker, Kubernetes, Git, CI/CD, cloud platforms]
-7. Extract work experience list:
-   - "company": string
-   - "title": string
-   - "start_date": string (e.g. "2021" or "01/2021")
-   - "end_date": string (e.g. "Present" or "2024")
-   - "location": string
-   - "highlights": [key achievements / bullet points]
-8. Extract education list:
-   - "degree": string
-   - "institution": string
-   - "graduation_year": string
+CRITICAL INSTRUCTIONS:
+1. Do NOT omit or skip any education or work history. If the candidate has multiple degrees or multiple jobs, extract ALL of them into the arrays.
+2. For Education:
+   - Extract EVERY institution, degree (e.g. B.Sc in CSE, HSC, SSC, etc.), university/college name, and graduation year or duration.
+   - Do not use generic placeholders like "University". Extract the exact name from the text (e.g. "Jahangirnagar University", "Dhaka University", etc.).
+3. For Work Experience & Projects:
+   - Extract EVERY job, internship, freelance work, and major project.
+   - Extract the real company or organization name, role title, exact start and end dates (e.g. "Jan 2023 - Present"), location, and detailed bullet points (highlights) describing what they built and technologies used.
+4. For Contact & Personal Info:
+   - Extract full first name, last name, email, phone number, city, country, LinkedIn URL, GitHub URL, and portfolio URL.
+5. For Skills:
+   - Thoroughly extract and categorize all technical skills mentioned in the resume.
+   - Use these exact keys: "languages", "frameworks_and_backend", "ai_and_data", "automation_and_devops".
 
 You MUST respond strictly with valid JSON conforming to this schema:
 {
@@ -142,7 +133,7 @@ You MUST respond strictly with valid JSON conforming to this schema:
     "languages": ["string"],
     "frameworks_and_backend": ["string"],
     "ai_and_data": ["string"],
-    "devops_and_tools": ["string"]
+    "automation_and_devops": ["string"]
   },
   "experience": [
     {

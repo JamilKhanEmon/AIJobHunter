@@ -16,10 +16,11 @@ import asyncio
 from backend.routes.jobs import router as jobs_router
 from backend.routes.crawlers import router as crawlers_router
 from backend.routes.evaluation import router as eval_router
-from backend.routes.automation import router as auto_router
+from backend.routes.applications import router as applications_router
 from backend.routes.profile import router as profile_router, settings_router
 from backend.routes.pipeline import router as pipeline_router
 from backend.routes.stats import router as stats_router
+from backend.routes.mcp import router as mcp_router
 from backend.services.autopilot import autopilot_service
 from backend.websocket import manager
 
@@ -45,7 +46,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Multi-Agent AI Job Hunter",
+    title="AI Job Hunter",
     version="1.0.0",
     description="Autonomous Multi-Agent AI Job Hunter Platform for ATS crawling, AI evaluation, and automated applying.",
     lifespan=lifespan
@@ -64,11 +65,12 @@ app.add_middleware(
 app.include_router(jobs_router)
 app.include_router(crawlers_router)
 app.include_router(eval_router)
-app.include_router(auto_router)
+app.include_router(applications_router)
 app.include_router(profile_router)
 app.include_router(settings_router)
 app.include_router(pipeline_router)
 app.include_router(stats_router)
+app.include_router(mcp_router)
 
 
 # WebSocket endpoint for real-time live logs

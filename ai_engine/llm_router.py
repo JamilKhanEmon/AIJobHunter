@@ -63,8 +63,49 @@ class LLMRouter:
             return self._default_json_eval()
 
     # Provider Implementations
+    def _get_groq_available_models(self, key: str) -> List[str]:
+        """Queries Groq /models to get the list of available chat models for this key."""
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.get(
+                    "https://api.groq.com/openai/v1/models",
+                    headers={"Authorization": f"Bearer {key}"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # Skip TTS, audio, vision, guardrails, and non-chat endpoints
+                    skip = {"whisper", "distil-whisper", "tts", "guard", "vision", "preview", "safeguard", "orpheus"}
+                    chat_models = [
+                        m["id"] for m in data.get("data", [])
+                        if not any(s in m["id"].lower() for s in skip)
+                    ]
+                    # Sort by speed and token allowance: 20B high-throughput first, then 27B, then 120B (which has low 8k TPM limit)
+                    def sort_key(mid: str) -> int:
+                        mid_l = mid.lower()
+                        if "gpt-oss-20b" in mid_l:
+                            return 0
+                        if "qwen3.8-27b" in mid_l or "qwen" in mid_l:
+                            return 1
+                        if "llama-3.1-8b" in mid_l:
+                            return 2
+                        if "gpt-oss-120b" in mid_l:
+                            return 3
+                        if "llama-3.3-70b" in mid_l:
+                            return 4
+                        return 10
+
+                    chat_models.sort(key=sort_key)
+                    logger.info(f"Groq API returned {len(chat_models)} chat models (prioritized): {chat_models}")
+                    return chat_models
+                else:
+                    logger.warning(f"Groq /models returned HTTP {resp.status_code}: {resp.text}")
+        except Exception as e:
+            logger.warning(f"Failed to fetch live Groq models: {e}")
+        return []
+
     def _call_groq(self, system_prompt: str, user_prompt: str, temperature: float, key_override: Optional[str] = None, model_override: Optional[str] = None) -> str:
-        """Calls Groq Cloud API (Free LPU Tier with ~500 tokens/sec)."""
+        """Calls Groq Cloud API with dynamic model discovery, 429 rate-limit fallback, and retry."""
+        import time
         key = (key_override or settings.groq_api_key or "").strip()
         if not key or "your_" in key:
             raise ValueError("Groq API key not configured. Obtain a free key at https://console.groq.com/keys")
@@ -73,23 +114,119 @@ class LLMRouter:
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json"
         }
-        target_model = model_override or self.model or "llama-3.3-70b-versatile"
-        if "qwen" in target_model.lower():
-            target_model = "llama-3.3-70b-versatile"
-        payload = {
-            "model": target_model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": temperature
-        }
-        with httpx.Client(timeout=35.0) as client:
-            resp = client.post(url, headers=headers, json=payload)
-            if resp.status_code != 200:
-                raise ValueError(f"Groq API error ({resp.status_code}): {resp.text}")
-            data = resp.json()
-            return data["choices"][0]["message"]["content"]
+
+        requested = model_override or self.model or ""
+        # Skip known decommissioned models
+        if any(bad in requested.lower() for bad in ["distill", "decommissioned", "mixtral", "gemma-7b"]):
+            requested = ""
+
+        # Step 1: Query live available models directly from the user's Groq account
+        live_models = self._get_groq_available_models(key)
+
+        MODERN_FALLBACKS = [
+            "openai/gpt-oss-20b",
+            "qwen/qwen3.8-27b",
+            "openai/gpt-oss-120b",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant"
+        ]
+
+        chain = []
+        if requested and (not live_models or requested in live_models):
+            chain.append(requested)
+
+        if live_models:
+            for m in live_models:
+                if m not in chain:
+                    chain.append(m)
+        else:
+            for m in MODERN_FALLBACKS:
+                if m not in chain:
+                    chain.append(m)
+
+        logger.info(f"Groq executing request with model chain: {chain[:5]}")
+
+        last_error = ""
+        rate_limit_wait = 0.0
+
+        for model_id in chain:
+            payload = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": temperature,
+                "max_tokens": 4096
+            }
+            try:
+                with httpx.Client(timeout=35.0) as client:
+                    resp = client.post(url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        logger.info(f"Groq successfully completed with model '{model_id}'")
+                        if requested and model_id != requested:
+                            try:
+                                settings.save_llm_settings(provider="groq", model=model_id)
+                            except Exception:
+                                pass
+                        return resp.json()["choices"][0]["message"]["content"]
+                    elif resp.status_code == 429:
+                        # Rate limit reached on this model (e.g. 120B hit TPM limit)
+                        try:
+                            err_msg = resp.json().get("error", {}).get("message", resp.text)
+                        except Exception:
+                            err_msg = resp.text
+                        last_error = f"Model '{model_id}' TPM/RPM rate limit (HTTP 429): {err_msg}"
+                        logger.warning(f"Groq 429 hit for '{model_id}'. Trying next available model in chain...")
+
+                        # Check if a short retry delay was suggested
+                        wait_match = re.search(r"try again in (\d+(?:\.\d+)?)s", err_msg)
+                        if wait_match:
+                            rate_limit_wait = max(rate_limit_wait, float(wait_match.group(1)))
+                        continue
+                    elif resp.status_code in (404, 400):
+                        try:
+                            err_msg = resp.json().get("error", {}).get("message", resp.text)
+                        except Exception:
+                            err_msg = resp.text
+                        last_error = f"Model '{model_id}' error (HTTP {resp.status_code}): {err_msg}"
+                        logger.warning(f"Groq fallback: {last_error}. Trying next model...")
+                        continue
+                    else:
+                        raise ValueError(f"Groq API error ({resp.status_code}): {resp.text}")
+            except ValueError:
+                raise
+            except Exception as e:
+                last_error = str(e)
+                continue
+
+        # If all models in chain were rate-limited but retry time is short (<= 6 seconds), sleep and retry once
+        if rate_limit_wait > 0 and rate_limit_wait <= 6.0:
+            sleep_duration = rate_limit_wait + 0.6
+            logger.info(f"Groq rate limits reset in {rate_limit_wait:.1f}s. Pausing {sleep_duration:.1f}s and retrying...")
+            time.sleep(sleep_duration)
+            # Retry with fastest lightweight model
+            fallback_model = chain[0] if chain else "openai/gpt-oss-20b"
+            try:
+                payload = {
+                    "model": fallback_model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": temperature,
+                    "max_tokens": 4096
+                }
+                with httpx.Client(timeout=35.0) as client:
+                    resp = client.post(url, headers=headers, json=payload)
+                    if resp.status_code == 200:
+                        logger.info(f"Groq post-cooldown retry succeeded with model '{fallback_model}'")
+                        return resp.json()["choices"][0]["message"]["content"]
+            except Exception as e:
+                last_error = str(e)
+
+        raise ValueError(f"All Groq models in fallback chain exhausted. Last error: {last_error}")
+
 
     def _call_ollama(self, system_prompt: str, user_prompt: str, temperature: float, host_override: Optional[str] = None, model_override: Optional[str] = None) -> str:
         host = (host_override or self.ollama_host or "http://localhost:11434").rstrip("/")
@@ -236,6 +373,13 @@ class LLMRouter:
         start_time = time.perf_counter()
         try:
             if p == "groq":
+                # For Groq: if no model explicitly specified, first auto-discover what's available
+                if not m or m == self.model:
+                    groq_key = (api_key or settings.groq_api_key or "").strip()
+                    live_models = self._get_groq_available_models(groq_key)
+                    if live_models:
+                        m = live_models[0]  # Use the first available model
+                        logger.info(f"Groq test_connection: auto-discovered {len(live_models)} models. Using '{m}'.")
                 reply = self._call_groq(sys_p, usr_p, 0.1, key_override=api_key, model_override=m)
             elif p == "ollama":
                 reply = self._call_ollama(sys_p, usr_p, 0.1, host_override=ollama_host, model_override=m)

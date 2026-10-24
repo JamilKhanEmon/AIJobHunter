@@ -80,8 +80,57 @@ const UI = {
   drawerGaps: document.getElementById("drawer-gaps"),
   drawerCoverLetter: document.getElementById("drawer-cover-letter"),
   btnGenerateLetter: document.getElementById("btn-generate-letter"),
-  btnDrawerDryRun: document.getElementById("btn-drawer-dry-run"),
-  btnDrawerLiveApply: document.getElementById("btn-drawer-live-apply")
+  btnDrawerOpenPortal: document.getElementById("btn-drawer-open-portal"),
+  btnDrawerMarkApplied: document.getElementById("btn-drawer-mark-applied"),
+  btnDrawerVerifyLive: document.getElementById("btn-drawer-verify-live"),
+  drawerGhostPill: document.getElementById("drawer-ghost-pill"),
+  drawerGhostScore: document.getElementById("drawer-ghost-score"),
+  drawerGhostSummary: document.getElementById("drawer-ghost-summary"),
+  drawerGhostSignals: document.getElementById("drawer-ghost-signals"),
+  drawerLivenessBadge: document.getElementById("drawer-liveness-badge"),
+  bannerCandidateName: document.getElementById("banner-candidate-name"),
+  bannerCandidateHeadline: document.getElementById("banner-candidate-headline"),
+  bannerCandidateSkillsPreview: document.getElementById("banner-candidate-skills-preview"),
+  bannerCvInitial: document.getElementById("banner-cv-initial"),
+  bannerCvFileInput: document.getElementById("banner-cv-file-input"),
+  bannerCvDropzone: document.getElementById("banner-cv-dropzone"),
+  bannerCvStatusText: document.getElementById("banner-cv-status-text"),
+  btnReRankCv: document.getElementById("btn-re-rank-cv"),
+  barReq: document.getElementById("bar-req"),
+  barSkills: document.getElementById("bar-skills"),
+  barTitle: document.getElementById("bar-title"),
+  barSeniority: document.getElementById("bar-seniority"),
+  txtBarReq: document.getElementById("txt-bar-req"),
+  txtBarSkills: document.getElementById("txt-bar-skills"),
+  txtBarTitle: document.getElementById("txt-bar-title"),
+  txtBarSeniority: document.getElementById("txt-bar-seniority"),
+  drawerMatchedSkills: document.getElementById("drawer-matched-skills"),
+  drawerMissingSkills: document.getElementById("drawer-missing-skills"),
+  btnCopyLetter: document.getElementById("btn-copy-letter"),
+  drawerQuickCopyChips: document.getElementById("drawer-quick-copy-chips"),
+  drawerEmailApplyBanner: document.getElementById("drawer-email-apply-banner"),
+  drawerDetectedEmail: document.getElementById("drawer-detected-email"),
+  btnCopyDetectedEmail: document.getElementById("btn-copy-detected-email"),
+  btnSendEmailApp: document.getElementById("btn-send-email-app")
+};
+
+// Clipboard Copy Helper with Visual Feedback
+window.copyToClipboard = function(text, label, btnElem) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    appendTerminalLine("CLIPBOARD", `Copied ${label} to clipboard: "${text}"`, "success");
+    if (btnElem) {
+      const origText = btnElem.innerHTML;
+      btnElem.innerHTML = "✓ Copied!";
+      btnElem.style.borderColor = "var(--accent-emerald)";
+      setTimeout(() => {
+        btnElem.innerHTML = origText;
+        btnElem.style.borderColor = "";
+      }, 1800);
+    }
+  }).catch(err => {
+    console.error("Clipboard error:", err);
+  });
 };
 
 // Bootstrap
@@ -277,6 +326,26 @@ async function fetchProfile() {
           if (allSkills.length) elSkills.value = allSkills.join(", ");
         }
         if (elSum && p.summary) elSum.value = p.summary.trim();
+
+        // Update Top Candidate CV Match Banner
+        const fullName = `${info.first_name || "Alex"} ${info.last_name || "Rivera"}`.trim();
+        if (UI.bannerCandidateName) UI.bannerCandidateName.textContent = fullName;
+        if (UI.bannerCvInitial) UI.bannerCvInitial.textContent = fullName.charAt(0).toUpperCase();
+        if (UI.bannerCandidateHeadline && info.headline) {
+          UI.bannerCandidateHeadline.textContent = info.headline;
+        }
+        if (UI.bannerCandidateSkillsPreview && p.skills) {
+          const allSkills = [
+            ...(p.skills.languages || []),
+            ...(p.skills.frameworks_and_backend || []),
+            ...(p.skills.ai_and_data || [])
+          ];
+          if (allSkills.length) {
+            UI.bannerCandidateSkillsPreview.innerHTML = allSkills.slice(0, 7)
+              .map(s => `<span class="cv-pill">${escapeHtml(s)}</span>`).join("") +
+              (allSkills.length > 7 ? `<span class="cv-pill" style="color: var(--accent-indigo); font-weight: 700;">+${allSkills.length - 7} more</span>` : "");
+          }
+        }
       }
     }
 
@@ -286,6 +355,23 @@ async function fetchProfile() {
       if (UI.sidebarActiveModel) {
         UI.sidebarActiveModel.textContent = `${s.provider}/${s.model}`;
       }
+
+      // Update quick API Key status button in header
+      const elKeyLabel = document.getElementById("header-api-key-label");
+      const elKeyDot = document.getElementById("header-api-key-dot");
+      const currentProv = (s.providers && s.providers[s.provider]) ? s.providers[s.provider] : null;
+      const isConfigured = currentProv ? currentProv.configured : (s.provider === "ollama");
+
+      if (elKeyLabel) {
+        elKeyLabel.textContent = isConfigured
+          ? `${s.provider.toUpperCase()}: Active`
+          : `API Key: Not Set (Click to Add)`;
+      }
+      if (elKeyDot) {
+        elKeyDot.style.background = isConfigured ? "#34d399" : "#fbbf24";
+        elKeyDot.style.boxShadow = isConfigured ? "0 0 8px rgba(52, 211, 153, 0.8)" : "0 0 8px rgba(251, 191, 36, 0.8)";
+      }
+
       if (UI.settingProvider) UI.settingProvider.value = s.provider;
       if (UI.settingModel) UI.settingModel.value = s.model;
       if (UI.settingHost && s.ollama_host) UI.settingHost.value = s.ollama_host;
@@ -379,6 +465,118 @@ const PROVIDERS_CATALOG = {
   }
 };
 
+// ── Live Model Picker ────────────────────────────────────────────────────────
+let _modelFetchTimer = null;
+
+async function fetchModelsForProvider(provider, apiKey, ollamaHost) {
+  const container = document.getElementById("setting-model-presets");
+  if (!container) return;
+
+  // Show loading spinner
+  container.innerHTML = `
+    <span style="font-size:0.72rem;color:var(--text-muted);display:flex;align-items:center;gap:0.4rem;">
+      <span style="display:inline-block;width:10px;height:10px;border:2px solid #6366f1;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;"></span>
+      Fetching live models for ${provider.toUpperCase()}...
+    </span>`;
+
+  try {
+    const payload = { provider };
+    if (apiKey && apiKey.trim()) payload.api_key = apiKey.trim();
+    if (ollamaHost && ollamaHost.trim()) payload.ollama_host = ollamaHost.trim();
+
+    const res = await fetch("/api/settings/list-models", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("Server error");
+    const data = await res.json();
+    const models = data.models || [];
+    const isLive = data.source === "live";
+
+    container.innerHTML = "";
+
+    // Source badge
+    const sourceBadge = document.createElement("div");
+    sourceBadge.style.cssText = "display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;flex-wrap:wrap;";
+    sourceBadge.innerHTML = `
+      <span style="font-size:0.69rem;color:${isLive ? '#34d399' : '#fbbf24'};font-weight:600;">
+        ${isLive ? '⚡ Live Models from ' + provider.toUpperCase() + ' API' : '📋 Curated Static List'}
+      </span>
+      <span style="font-size:0.69rem;color:var(--text-muted);">(${models.length} available)</span>
+    `;
+    container.appendChild(sourceBadge);
+
+    // Search filter input
+    const searchWrap = document.createElement("div");
+    searchWrap.style.cssText = "display:flex;gap:0.4rem;align-items:center;margin-bottom:0.4rem;";
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "Search models...";
+    searchInput.style.cssText = "font-size:0.74rem;padding:0.3rem 0.6rem;background:var(--bg-input,#1e293b);border:1px solid var(--border-subtle);border-radius:6px;color:var(--text-primary);width:100%;outline:none;";
+    searchWrap.appendChild(searchInput);
+    container.appendChild(searchWrap);
+
+    // Model chips container (scrollable)
+    const chipsEl = document.createElement("div");
+    chipsEl.id = "model-chips-inner";
+    chipsEl.style.cssText = "display:flex;flex-wrap:wrap;gap:0.35rem;max-height:110px;overflow-y:auto;padding:0.25rem 0;";
+    container.appendChild(chipsEl);
+
+    function renderChips(filter) {
+      chipsEl.innerHTML = "";
+      const filtered = filter
+        ? models.filter(m => m.id.toLowerCase().includes(filter.toLowerCase()) || (m.name || "").toLowerCase().includes(filter.toLowerCase()))
+        : models;
+
+      if (!filtered.length) {
+        chipsEl.innerHTML = `<span style="font-size:0.72rem;color:var(--text-muted);">No models match your search.</span>`;
+        return;
+      }
+
+      filtered.forEach(m => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.title = m.id;
+        const isActive = m.active || (UI.settingModel && UI.settingModel.value === m.id);
+        chip.style.cssText = `
+          font-size: 0.71rem; padding: 0.22rem 0.6rem; border-radius: 5px; cursor: pointer;
+          border: 1px solid ${isActive ? '#6366f1' : 'rgba(99,102,241,0.25)'};
+          background: ${isActive ? 'rgba(99,102,241,0.18)' : 'rgba(30,41,59,0.7)'};
+          color: ${isActive ? '#a5b4fc' : 'var(--text-muted)'};
+          transition: all 0.15s; font-weight: ${isActive ? '600' : '400'};
+          white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+        `;
+        chip.textContent = m.name || m.id;
+        chip.onmouseenter = () => { chip.style.borderColor = "#6366f1"; chip.style.color = "#c7d2fe"; };
+        chip.onmouseleave = () => { if (UI.settingModel?.value !== m.id) { chip.style.borderColor = "rgba(99,102,241,0.25)"; chip.style.color = "var(--text-muted)"; } };
+        chip.onclick = () => {
+          if (UI.settingModel) UI.settingModel.value = m.id;
+          // Highlight selected chip
+          chipsEl.querySelectorAll("button").forEach(b => {
+            b.style.background = "rgba(30,41,59,0.7)";
+            b.style.borderColor = "rgba(99,102,241,0.25)";
+            b.style.color = "var(--text-muted)";
+            b.style.fontWeight = "400";
+          });
+          chip.style.background = "rgba(99,102,241,0.18)";
+          chip.style.borderColor = "#6366f1";
+          chip.style.color = "#a5b4fc";
+          chip.style.fontWeight = "600";
+          appendTerminalLine("ROUTER", `Model selected: '${m.id}' (${provider.toUpperCase()})`, "info");
+        };
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    renderChips("");
+    searchInput.addEventListener("input", (e) => renderChips(e.target.value));
+
+  } catch (err) {
+    container.innerHTML = `<span style="font-size:0.72rem;color:#f87171;">⚠ Could not load models: ${err.message}</span>`;
+  }
+}
+
 function updateProviderUI(provider, settingsData) {
   const p = (provider || "groq").toLowerCase();
   const meta = PROVIDERS_CATALOG[p] || PROVIDERS_CATALOG.groq;
@@ -389,11 +587,16 @@ function updateProviderUI(provider, settingsData) {
     UI.settingProviderBadge.textContent = meta.badge;
     UI.settingProviderBadge.style.color = meta.badgeColor;
     UI.settingProviderBadge.style.borderColor = meta.badgeColor;
+    UI.settingProviderBadge.style.background = `${meta.badgeColor}18`;
+    UI.settingProviderBadge.style.borderColor = `${meta.badgeColor}55`;
   }
 
   if (p === "ollama") {
     if (UI.providerKeyGroup) UI.providerKeyGroup.style.display = "none";
     if (UI.ollamaHostGroup) UI.ollamaHostGroup.style.display = "flex";
+    // Fetch local Ollama models
+    const host = UI.settingHost ? UI.settingHost.value.trim() : "";
+    fetchModelsForProvider(p, "", host);
   } else {
     if (UI.providerKeyGroup) UI.providerKeyGroup.style.display = "flex";
     if (UI.ollamaHostGroup) UI.ollamaHostGroup.style.display = "none";
@@ -412,38 +615,20 @@ function updateProviderUI(provider, settingsData) {
       if (provInfo && provInfo.configured) {
         UI.settingKeyStatus.textContent = `✓ Active API Key saved in secrets.yaml (${provInfo.masked_key})`;
         UI.settingKeyStatus.style.color = "#34d399";
+        // Auto-fetch models if key is already configured
+        fetchModelsForProvider(p, provInfo.masked_key);
       } else {
         UI.settingKeyStatus.textContent = `✕ No key configured. Enter your ${meta.name} key above.`;
         UI.settingKeyStatus.style.color = "#fbbf24";
+        // Show static list even without key
+        fetchModelsForProvider(p, "");
       }
     }
   }
 
-  // Populate dynamic clickable preset badges
-  if (UI.settingModelPresets) {
-    UI.settingModelPresets.innerHTML = "";
-    const label = document.createElement("span");
-    label.style.fontSize = "0.72rem";
-    label.style.color = "var(--text-muted)";
-    label.style.marginRight = "0.3rem";
-    label.textContent = "Recommended Models:";
-    UI.settingModelPresets.appendChild(label);
-
-    meta.presets.forEach(preset => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "chip-btn";
-      chip.style.padding = "0.2rem 0.55rem";
-      chip.style.fontSize = "0.72rem";
-      chip.textContent = preset;
-      chip.onclick = () => {
-        if (UI.settingModel) {
-          UI.settingModel.value = preset;
-          appendTerminalLine("ROUTER", `Model preset set to '${preset}' for ${p.toUpperCase()}`, "info");
-        }
-      };
-      UI.settingModelPresets.appendChild(chip);
-    });
+  // Update model input to provider default
+  if (UI.settingModel) {
+    UI.settingModel.value = meta.defaultModel;
   }
 }
 
@@ -518,7 +703,7 @@ window.setMasterView = function(view) {
   }
 };
 
-// Render Master Data Grid
+// Render Master Data Grid (CV-Centric Personal Matchmaker)
 function renderDataGrid() {
   const query = AppState.activeFilter.query.toLowerCase();
   const source = AppState.activeFilter.source.toLowerCase();
@@ -529,20 +714,43 @@ function renderDataGrid() {
     const matchesQuery = !query ||
       job.title.toLowerCase().includes(query) ||
       job.company.toLowerCase().includes(query) ||
-      (job.location && job.location.toLowerCase().includes(query));
+      (job.location && job.location.toLowerCase().includes(query)) ||
+      (job.cv_match && job.cv_match.matched_skills && job.cv_match.matched_skills.some(s => s.toLowerCase().includes(query)));
 
     // Source
     const matchesSource = !source || (job.source && job.source.toLowerCase() === source);
 
-    // Score Filter
+    // Faceted Match Filters
     let matchesScore = true;
-    const score = job.evaluation ? job.evaluation.score : null;
-    if (scoreCat === "high") matchesScore = score !== null && score >= 80;
-    else if (scoreCat === "mid") matchesScore = score !== null && score >= 60 && score < 80;
-    else if (scoreCat === "unscored") matchesScore = score === null;
+    const cvScore = (job.cv_match && job.cv_match.score) || (job.evaluation ? job.evaluation.score : 0);
+    const ghost = job.ghost_analysis;
+    const stage = (job.application ? job.application.status : (job.status || "DISCOVERED")).toUpperCase();
+
+    if (scoreCat === "top") matchesScore = cvScore >= 80;
+    else if (scoreCat === "good") matchesScore = cvScore >= 65 && cvScore < 80;
+    else if (scoreCat === "fresh") matchesScore = ghost && ghost.reality_class === "fresh";
+    else if (scoreCat === "ghost") matchesScore = ghost && ghost.is_ghost;
+    else if (scoreCat === "applied") matchesScore = stage !== "DISCOVERED";
 
     return matchesQuery && matchesSource && matchesScore;
   });
+
+  // Sort descending by candidate CV Match Score (best matches first)
+  filtered.sort((a, b) => {
+    const sa = (a.cv_match && a.cv_match.score) || (a.evaluation ? a.evaluation.score : 0);
+    const sb = (b.cv_match && b.cv_match.score) || (b.evaluation ? b.evaluation.score : 0);
+    return sb - sa;
+  });
+
+  // Update candidate match stats banner
+  const allScores = AppState.jobs.map(j => (j.cv_match && j.cv_match.score) || 0);
+  const highCount = allScores.filter(s => s >= 80).length;
+  const avgFit = allScores.length ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+  
+  const elHighBadge = document.getElementById("banner-high-match-count");
+  const elAvgFit = document.getElementById("banner-avg-fit");
+  if (elHighBadge) elHighBadge.textContent = `🌟 ${highCount} Best Fits (≥80%)`;
+  if (elAvgFit) elAvgFit.textContent = `Avg Fit: ${avgFit}%`;
 
   // Always update Kanban and Studio Select
   renderKanbanBoard();
@@ -552,7 +760,7 @@ function renderDataGrid() {
     UI.jobsTbody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 4rem;">
-          No matching listings found. Try adjusting filters or launch an ingestion crawl.
+          No matching listings found for this filter. Try adjusting criteria or upload your CV to recalculate.
         </td>
       </tr>
     `;
@@ -567,13 +775,23 @@ function renderDataGrid() {
     const s = (job.source || "greenhouse").toLowerCase();
     const sourceClass = `badge-${s}`;
 
-    // Score Gauge Pill
-    let scorePill = `<span class="score-pill score-none">Unscored</span>`;
-    if (job.evaluation) {
-      const sc = job.evaluation.score;
-      const cls = sc >= 80 ? "score-high" : (sc >= 60 ? "score-mid" : "score-low");
-      scorePill = `<span class="score-pill ${cls}">${sc}% ${job.evaluation.verdict}</span>`;
-    }
+    // CV Match Score & Pill
+    const cv = job.cv_match || { score: 75, verdict_label: "Match" };
+    const cvScore = cv.score;
+    const scoreClass = cvScore >= 80 ? "score-high" : (cvScore >= 65 ? "score-mid" : "score-low");
+    const cvPill = `<span class="score-pill ${scoreClass}" title="${escapeHtml(cv.highlights ? cv.highlights.join(' • ') : '')}">${cvScore}% Fit</span>`;
+
+    // Skills Overlap Chips
+    const matchedChips = (cv.matched_skills || []).slice(0, 3)
+      .map(s => `<span class="skill-chip-match">✓ ${escapeHtml(s)}</span>`).join("");
+    const missingChips = (cv.missing_skills || []).slice(0, 2)
+      .map(s => `<span class="skill-chip-gap">! ${escapeHtml(s)}</span>`).join("");
+
+    // Ghost Reality Badge & Link Vitality
+    const ghostBadge = getGhostBadgeHtml(job.ghost_analysis);
+    const vitalityBadge = job.status === "EXPIRED"
+      ? `<span class="badge" style="background: rgba(248, 113, 113, 0.15); color: #f87171; font-size: 0.65rem;">🔴 Closed</span>`
+      : `<span class="badge" style="background: rgba(52, 211, 153, 0.12); color: #34d399; font-size: 0.65rem;">✓ Live</span>`;
 
     // Stage
     const stage = job.application ? job.application.status : (job.status || "DISCOVERED");
@@ -584,23 +802,35 @@ function renderDataGrid() {
           <div class="company-cell">
             <div class="company-avatar" style="background: ${getCompanyGradient(job.company)}; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">${initial}</div>
             <div class="job-identity">
-              <div style="display: flex; align-items: center; gap: 0.45rem;">
+              <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
                 <span class="job-role">${escapeHtml(job.title)}</span>
-                <span class="freshness-pill"><span class="autopilot-pulse-dot" style="width: 5px; height: 5px;"></span> Fresh</span>
+                ${ghostBadge}
               </div>
               <span class="job-company">${escapeHtml(job.company)}</span>
+              <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                ${matchedChips}
+                ${missingChips}
+              </div>
             </div>
           </div>
         </td>
         <td>
-          <span class="badge ${sourceClass}">${escapeHtml(job.source || "ATS")}</span>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start;">
+            <span class="badge ${sourceClass}">${escapeHtml(job.source || "ATS")}</span>
+            ${vitalityBadge}
+          </div>
         </td>
         <td>
           <span style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem;">
             ${job.remote ? '<span style="color: #34d399; font-weight: 700;">🌐 Remote</span>' : escapeHtml(job.location || "On-site")}
           </span>
         </td>
-        <td>${scorePill}</td>
+        <td>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start;">
+            ${cvPill}
+            <span style="font-size: 0.68rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${escapeHtml(cv.verdict_label || 'Evaluated')}</span>
+          </div>
+        </td>
         <td>
           <span style="font-size: 0.74rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 0.15rem 0.45rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
             ${escapeHtml(stage)}
@@ -608,13 +838,16 @@ function renderDataGrid() {
         </td>
         <td style="text-align: right;">
           <div class="row-actions-group">
-            <button class="row-action-btn btn-apply-fast" title="1-Click Dry-Run Auto-Apply" onclick="event.stopPropagation(); triggerQuickApply(${job.id});">
-              ⚡ Apply
+            <button class="row-action-btn btn-portal-fast" title="Open official company career portal directly" onclick="event.stopPropagation(); openCareerPortal(${job.id});">
+              ↗ Portal
+            </button>
+            <button class="row-action-btn" title="Toggle Application Status" onclick="event.stopPropagation(); trackJobStage(${job.id}, '${stage === 'APPLIED' ? 'DISCOVERED' : 'APPLIED'}');">
+              ${stage === 'APPLIED' ? '✓ Applied' : 'Mark Applied'}
             </button>
             <button class="row-action-btn" title="AI Cover Letter Studio" onclick="event.stopPropagation(); openCoverLetterStudioForJob(${job.id});">
               📄 Letter
             </button>
-            <button class="row-action-btn" title="Inspect Job Details" onclick="event.stopPropagation(); selectJob(${job.id});">
+            <button class="row-action-btn" title="Inspect Full CV Fit Breakdown" onclick="event.stopPropagation(); selectJob(${job.id});">
               👁️
             </button>
           </div>
@@ -673,8 +906,8 @@ window.renderKanbanBoard = function() {
           <span style="font-size: 0.72rem; color: var(--text-muted);">
             ${job.remote ? '🌐 Remote' : escapeHtml((job.location || 'Global').split(',')[0])}
           </span>
-          <button class="row-action-btn btn-apply-fast" style="padding: 0.2rem 0.45rem; font-size: 0.68rem;" onclick="event.stopPropagation(); triggerQuickApply(${job.id});">
-            ⚡ Quick Apply
+          <button class="row-action-btn btn-portal-fast" style="padding: 0.2rem 0.55rem; font-size: 0.68rem;" onclick="event.stopPropagation(); openCareerPortal(${job.id});">
+            ↗ Apply on Portal
           </button>
         </div>
       </div>
@@ -722,31 +955,44 @@ window.selectJob = function(jobId) {
   UI.drawerSourceBadge.className = `badge badge-${s}`;
   UI.drawerSourceBadge.textContent = job.source || "ATS";
 
-  // Score
-  if (job.evaluation) {
-    const sc = job.evaluation.score;
-    UI.drawerGauge.textContent = sc;
-    UI.drawerGauge.style.borderColor = sc >= 80 ? "var(--accent-emerald)" : (sc >= 60 ? "var(--accent-amber)" : "var(--accent-rose)");
-    UI.drawerGauge.style.color = sc >= 80 ? "var(--accent-emerald)" : (sc >= 60 ? "var(--accent-amber)" : "var(--accent-rose)");
-    UI.drawerVerdict.textContent = `${job.evaluation.verdict} (${sc}% Match)`;
-    UI.drawerRationale.textContent = job.evaluation.full_rationale || "Fit evaluated against candidate background.";
+  // 4-Tier CV Match Matrix & Alignment
+  const cv = job.cv_match || { score: 75, verdict_label: "Matched" };
+  const score = cv.score;
+  UI.drawerGauge.textContent = score;
+  UI.drawerGauge.style.borderColor = score >= 80 ? "var(--accent-emerald)" : (score >= 65 ? "var(--accent-amber)" : "var(--accent-rose)");
+  UI.drawerGauge.style.color = score >= 80 ? "var(--accent-emerald)" : (score >= 65 ? "var(--accent-amber)" : "var(--accent-rose)");
+  UI.drawerVerdict.textContent = `${cv.verdict_label || 'Evaluated'} (${score}% Match with CV)`;
+  UI.drawerRationale.textContent = (cv.highlights && cv.highlights.length > 0)
+    ? cv.highlights.join(" • ")
+    : (job.evaluation ? job.evaluation.full_rationale : "Fit evaluated directly against your uploaded CV.");
 
-    // Strengths
-    UI.drawerStrengths.innerHTML = (job.evaluation.pros || ["Candidate background demonstrates solid baseline."])
-      .map(p => `<li>${escapeHtml(p)}</li>`).join("");
+  // Update Match Breakdown Progress Bars
+  if (cv.breakdown) {
+    const b = cv.breakdown;
+    if (UI.barReq) UI.barReq.style.width = `${b.requirements_coverage}%`;
+    if (UI.txtBarReq) UI.txtBarReq.textContent = `${b.requirements_coverage}%`;
+    if (UI.barSkills) UI.barSkills.style.width = `${b.skills_match}%`;
+    if (UI.txtBarSkills) UI.txtBarSkills.textContent = `${b.skills_match}%`;
+    if (UI.barTitle) UI.barTitle.style.width = `${b.title_alignment}%`;
+    if (UI.txtBarTitle) UI.txtBarTitle.textContent = `${b.title_alignment}%`;
+    if (UI.barSeniority) UI.barSeniority.style.width = `${b.seniority_fit}%`;
+    if (UI.txtBarSeniority) UI.txtBarSeniority.textContent = `${b.seniority_fit}%`;
+  }
 
-    // Gaps
-    UI.drawerGaps.innerHTML = (job.evaluation.cons && job.evaluation.cons.length > 0)
-      ? job.evaluation.cons.map(c => `<li>${escapeHtml(c)}</li>`).join("")
-      : `<li>No critical qualification gaps identified.</li>`;
-  } else {
-    UI.drawerGauge.textContent = "--";
-    UI.drawerGauge.style.borderColor = "var(--border-medium)";
-    UI.drawerGauge.style.color = "var(--text-muted)";
-    UI.drawerVerdict.textContent = "PENDING EVALUATION";
-    UI.drawerRationale.textContent = "Run evaluation to assess technical alignment and dealbreakers.";
-    UI.drawerStrengths.innerHTML = `<li>Click 'Run Batch Evaluation' to calculate fit.</li>`;
-    UI.drawerGaps.innerHTML = `<li>Awaiting evaluation data.</li>`;
+  // Matched Skills Chip Cloud
+  if (UI.drawerMatchedSkills) {
+    const matched = cv.matched_skills || [];
+    UI.drawerMatchedSkills.innerHTML = matched.length > 0
+      ? matched.map(s => `<span class="skill-chip-match">✓ ${escapeHtml(s)}</span>`).join("")
+      : `<span style="font-size: 0.76rem; color: var(--text-muted);">Transferable software engineering foundation</span>`;
+  }
+
+  // Missing Skills Gaps
+  if (UI.drawerMissingSkills) {
+    const missing = cv.missing_skills || [];
+    UI.drawerMissingSkills.innerHTML = missing.length > 0
+      ? missing.map(s => `<span class="skill-chip-gap">! ${escapeHtml(s)}</span>`).join("")
+      : `<span style="font-size: 0.76rem; color: #34d399; font-weight: 600;">✓ No critical tech gaps found for your profile</span>`;
   }
 
   // Cover Letter
@@ -754,6 +1000,107 @@ window.selectJob = function(jobId) {
     UI.drawerCoverLetter.textContent = job.application.cover_letter;
   } else {
     UI.drawerCoverLetter.textContent = "Click 'Draft Letter' to generate a targeted letter aligned with this job.";
+  }
+
+  // Ghost Job & Reality Radar
+  if (job.ghost_analysis) {
+    const g = job.ghost_analysis;
+    if (UI.drawerGhostPill) {
+      UI.drawerGhostPill.textContent = g.label;
+      UI.drawerGhostPill.className = `badge ${g.reality_class === 'fresh' ? 'badge-ghost-fresh' : (g.reality_class === 'stale' ? 'badge-ghost-stale' : 'badge-ghost-warning')}`;
+    }
+    if (UI.drawerGhostScore) {
+      UI.drawerGhostScore.textContent = `${g.authenticity_score}%`;
+      UI.drawerGhostScore.style.color = g.authenticity_score >= 80 ? "var(--accent-emerald)" : (g.authenticity_score >= 60 ? "var(--accent-amber)" : "var(--accent-rose)");
+    }
+    if (UI.drawerGhostSummary) {
+      UI.drawerGhostSummary.textContent = g.summary;
+    }
+    if (UI.drawerGhostSignals) {
+      if (g.signals && g.signals.length > 0) {
+        UI.drawerGhostSignals.innerHTML = g.signals.map(s => `<li>${escapeHtml(s)}</li>`).join("");
+      } else {
+        UI.drawerGhostSignals.innerHTML = `<li>No evergreen phrases detected</li>`;
+      }
+    }
+  }
+
+  // Liveness Status indicator
+  if (UI.drawerLivenessBadge) {
+    if (job.status === "EXPIRED") {
+      UI.drawerLivenessBadge.innerHTML = `<span style="color: #f87171; font-weight: 600;">🔴 Posting Confirmed Closed / Expired</span>`;
+    } else {
+      UI.drawerLivenessBadge.innerHTML = `<span>🌐 Status: Active Portal (Click 'Verify Link' to probe in real-time)</span>`;
+    }
+  }
+
+  // Active Stage Highlight
+  const currentStage = (job.application ? job.application.status : (job.status || "DISCOVERED")).toUpperCase();
+  document.querySelectorAll(".stage-tag-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.stage === currentStage);
+  });
+
+  // Populate 1-Click Fast Fill (Quick Copy Profile Chips)
+  if (UI.drawerQuickCopyChips) {
+    const p = AppState.profile || {};
+    const info = p.personal_information || {};
+    const fullName = `${info.first_name || ""} ${info.last_name || ""}`.trim();
+    const email = info.email || "";
+    const phone = `${info.phone_country_code || ""}${info.phone_number || ""}`.trim();
+    const linkedin = info.linkedin_url || "";
+    const portfolio = info.portfolio_url || "";
+    const github = info.github_url || "";
+
+    const chips = [
+      { label: "Name", val: fullName, icon: "👤" },
+      { label: "Email", val: email, icon: "✉️" },
+      { label: "Phone", val: phone, icon: "📞" },
+      { label: "LinkedIn", val: linkedin, icon: "🔗" },
+      { label: "Portfolio", val: portfolio, icon: "🌐" },
+      { label: "GitHub", val: github, icon: "💻" }
+    ].filter(c => Boolean(c.val));
+
+    if (chips.length > 0) {
+      UI.drawerQuickCopyChips.innerHTML = chips.map(c => `
+        <button class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 0.22rem 0.5rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(255,255,255,0.04);" onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(c.val)}', '${escapeHtml(c.label)}', this)">
+          <span>${c.icon}</span>
+          <span>Copy ${escapeHtml(c.label)}</span>
+        </button>
+      `).join("");
+    } else {
+      UI.drawerQuickCopyChips.innerHTML = `<span style="font-size: 0.72rem; color: var(--text-muted);">Upload your CV in Profile tab to enable 1-Click copy</span>`;
+    }
+  }
+
+  // Direct Email Application Detector
+  if (UI.drawerEmailApplyBanner && UI.drawerDetectedEmail && UI.btnSendEmailApp) {
+    const textToScan = `${job.title} ${job.description || ""}`;
+    const emailMatch = textToScan.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    if (emailMatch && !emailMatch[0].includes("example.com")) {
+      const foundEmail = emailMatch[0];
+      UI.drawerDetectedEmail.textContent = foundEmail;
+      UI.drawerEmailApplyBanner.style.display = "block";
+
+      const candInfo = (AppState.profile && AppState.profile.personal_information) || {};
+      const candName = `${candInfo.first_name || ""} ${candInfo.last_name || ""}`.trim() || "Applicant";
+      const subject = encodeURIComponent(`Application for ${job.title} - ${candName}`);
+      
+      const coverText = (job.application && job.application.cover_letter)
+        ? job.application.cover_letter
+        : `Dear Hiring Team at ${job.company},\n\nI am writing to express my strong interest in the ${job.title} role.\n\nPlease find my resume attached.\n\nBest regards,\n${candName}`;
+      
+      const body = encodeURIComponent(coverText);
+      UI.btnSendEmailApp.href = `mailto:${foundEmail}?subject=${subject}&body=${body}`;
+
+      if (UI.btnCopyDetectedEmail) {
+        UI.btnCopyDetectedEmail.onclick = function(e) {
+          e.stopPropagation();
+          copyToClipboard(foundEmail, "Recruiter Email", this);
+        };
+      }
+    } else {
+      UI.drawerEmailApplyBanner.style.display = "none";
+    }
   }
 
   openDrawer();
@@ -969,21 +1316,131 @@ function setupEventListeners() {
     }
   });
 
-  // Dry Run Apply
-  UI.btnDrawerDryRun.addEventListener("click", () => {
-    if (!AppState.selectedJobId) return;
-    launchApplication(AppState.selectedJobId, true);
+  // Copy Cover Letter
+  if (UI.btnCopyLetter) {
+    UI.btnCopyLetter.addEventListener("click", () => {
+      const letter = (UI.drawerCoverLetter ? UI.drawerCoverLetter.textContent : "").trim();
+      if (!letter || letter.startsWith("Click 'Draft Letter'") || letter.startsWith("Synthesizing")) {
+        appendTerminalLine("CLIPBOARD", "Please draft a cover letter first before copying.", "warning");
+        return;
+      }
+      copyToClipboard(letter, "Cover Letter", UI.btnCopyLetter);
+    });
+  }
+
+  // Direct Portal Apply
+  if (UI.btnDrawerOpenPortal) {
+    UI.btnDrawerOpenPortal.addEventListener("click", () => {
+      if (!AppState.selectedJobId) return;
+      openCareerPortal(AppState.selectedJobId);
+    });
+  }
+
+  // Mark as Applied
+  if (UI.btnDrawerMarkApplied) {
+    UI.btnDrawerMarkApplied.addEventListener("click", () => {
+      if (!AppState.selectedJobId) return;
+      trackJobStage(AppState.selectedJobId, "APPLIED");
+    });
+  }
+
+  // Link Liveness Check
+  if (UI.btnDrawerVerifyLive) {
+    UI.btnDrawerVerifyLive.addEventListener("click", () => {
+      if (!AppState.selectedJobId) return;
+      verifyJobLiveness(AppState.selectedJobId);
+    });
+  }
+
+  // Application Stage Selector Tags
+  document.querySelectorAll(".stage-tag-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!AppState.selectedJobId) return;
+      trackJobStage(AppState.selectedJobId, btn.dataset.stage);
+    });
   });
 
-  // Live Apply
-  UI.btnDrawerLiveApply.addEventListener("click", () => {
-    if (!AppState.selectedJobId) return;
-    if (confirm("Execute live submission on this job?")) {
-      launchApplication(AppState.selectedJobId, false);
+  // Top Banner Candidate CV Upload & Re-Ranking
+  async function uploadCandidateCV(file) {
+    if (!file) return;
+    if (UI.bannerCvStatusText) {
+      UI.bannerCvStatusText.textContent = `⏳ Uploading & Analyzing ${file.name}...`;
+      UI.bannerCvStatusText.style.color = "var(--accent-amber)";
     }
-  });
+    appendTerminalLine("CV_MATCHER", `Uploading resume '${file.name}' to re-calculate personalized job matches...`, "info");
 
-  // Resume File Upload & AI Generation Handlers
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/profile/upload-resume", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Upload failed");
+
+      if (UI.bannerCvStatusText) {
+        UI.bannerCvStatusText.textContent = `✓ Active CV: ${file.name}`;
+        UI.bannerCvStatusText.style.color = "var(--accent-emerald)";
+      }
+      appendTerminalLine("CV_MATCHER", `✓ Successfully parsed CV! Candidate profile synchronized. Re-ranking all jobs...`, "success");
+
+      await fetchProfile();
+      await fetchJobs();
+      appendTerminalLine("CV_MATCHER", `🌟 Feed updated: Top jobs sorted by best fit with ${file.name}.`, "success");
+    } catch (err) {
+      if (UI.bannerCvStatusText) {
+        UI.bannerCvStatusText.textContent = `✕ Failed: ${err.message}`;
+        UI.bannerCvStatusText.style.color = "var(--accent-rose)";
+      }
+      appendTerminalLine("CV_MATCHER", `Upload error: ${err.message}`, "error");
+      alert(`CV Upload Error: ${err.message}`);
+    }
+  }
+
+  if (UI.bannerCvFileInput) {
+    UI.bannerCvFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) uploadCandidateCV(file);
+    });
+  }
+
+  if (UI.bannerCvDropzone) {
+    UI.bannerCvDropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      UI.bannerCvDropzone.classList.add("dragover");
+    });
+    UI.bannerCvDropzone.addEventListener("dragleave", () => {
+      UI.bannerCvDropzone.classList.remove("dragover");
+    });
+    UI.bannerCvDropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      UI.bannerCvDropzone.classList.remove("dragover");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        uploadCandidateCV(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  if (UI.btnReRankCv) {
+    UI.btnReRankCv.addEventListener("click", async () => {
+      appendTerminalLine("CV_MATCHER", "Re-scoring and re-ranking all job vacancies against current CV profile...", "info");
+      const origHtml = UI.btnReRankCv.innerHTML;
+      UI.btnReRankCv.innerHTML = `<span>⏳ Re-Scoring...</span>`;
+      UI.btnReRankCv.disabled = true;
+      try {
+        await fetchProfile();
+        await fetchJobs();
+        appendTerminalLine("CV_MATCHER", `✓ Re-scoring complete. ${AppState.jobs.length} jobs evaluated against candidate profile.`, "success");
+      } finally {
+        UI.btnReRankCv.innerHTML = origHtml;
+        UI.btnReRankCv.disabled = false;
+      }
+    });
+  }
+
+  // Resume File Upload & AI Generation Handlers (Profile Tab)
   const fileInput = document.getElementById("input-resume-file");
   const btnBrowse = document.getElementById("btn-browse-resume");
   const uploadCard = document.getElementById("resume-upload-card");
@@ -1094,7 +1551,9 @@ function setupEventListeners() {
         }
 
         appendTerminalLine("RESUME", `✓ Successfully parsed '${selectedResumeFile.name}'! Candidate schema generated and active.`, "success");
-        alert(`✓ Resume '${selectedResumeFile.name}' parsed successfully!\nCandidate Profile JSON schema has been generated and saved.`);
+        await fetchProfile();
+        await fetchJobs();
+        alert(`✓ Resume '${selectedResumeFile.name}' parsed successfully!\nCandidate Profile JSON schema has been generated and saved. All job vacancies re-ranked for your CV!`);
       } catch (err) {
         appendTerminalLine("RESUME", `Error parsing resume: ${err.message}`, "error");
         alert("Failed to parse resume: " + err.message);
@@ -1167,12 +1626,45 @@ function setupEventListeners() {
   if (UI.settingProvider) {
     UI.settingProvider.addEventListener("change", (e) => {
       const p = e.target.value;
-      const meta = PROVIDERS_CATALOG[p] || PROVIDERS_CATALOG.groq;
-      if (UI.settingModel) {
-        UI.settingModel.value = meta.defaultModel;
-      }
       if (UI.testConnectionResult) UI.testConnectionResult.style.display = "none";
       updateProviderUI(p, AppState.settingsData);
+    });
+  }
+
+  // API Key Input → Auto-fetch Live Models on blur (debounced)
+  if (UI.settingApiKey) {
+    UI.settingApiKey.addEventListener("blur", () => {
+      const key = UI.settingApiKey.value.trim();
+      const provider = UI.settingProvider ? UI.settingProvider.value : "groq";
+      if (key.length >= 8) {
+        appendTerminalLine("ROUTER", `API key entered. Fetching live model list from ${provider.toUpperCase()}...`, "info");
+        fetchModelsForProvider(provider, key);
+        // Update status indicator
+        if (UI.settingKeyStatus) {
+          UI.settingKeyStatus.textContent = `🔑 Key entered. Testing availability...`;
+          UI.settingKeyStatus.style.color = "#93c5fd";
+        }
+      }
+    });
+    // Also trigger on paste
+    UI.settingApiKey.addEventListener("paste", () => {
+      setTimeout(() => {
+        const key = UI.settingApiKey.value.trim();
+        const provider = UI.settingProvider ? UI.settingProvider.value : "groq";
+        if (key.length >= 8) {
+          fetchModelsForProvider(provider, key);
+        }
+      }, 100);
+    });
+  }
+
+  // Ollama host change → refetch local models
+  if (UI.settingHost) {
+    UI.settingHost.addEventListener("blur", () => {
+      const provider = UI.settingProvider ? UI.settingProvider.value : "groq";
+      if (provider === "ollama") {
+        fetchModelsForProvider("ollama", "", UI.settingHost.value.trim());
+      }
     });
   }
 
@@ -1337,19 +1829,68 @@ window.executeCustom = function(source, inputId) {
   window.executeCrawl(source, el.value.trim());
 };
 
-async function launchApplication(jobId, dryRun = true) {
-  appendTerminalLine("APPLY", `Dispatching browser automation bot (Job #${jobId}, DryRun: ${dryRun})...`, "info");
+// Direct-From-Source Career Portal & Stage Tracking
+window.openCareerPortal = function(jobId) {
+  const job = AppState.jobs.find(j => j.id === jobId);
+  if (!job || !job.url) return;
+  appendTerminalLine("PORTAL", `Navigating directly to verified career portal for ${job.company}: ${job.url}`, "info");
+  window.open(job.url, "_blank");
+};
+
+window.trackJobStage = async function(jobId, stage) {
+  const job = AppState.jobs.find(j => j.id === jobId);
+  const company = job ? job.company : `Job #${jobId}`;
+  appendTerminalLine("TRACK", `Updating application status for ${company} to [${stage}]...`, "info");
   try {
-    const res = await fetch(`/api/automation/apply/${jobId}`, {
+    const res = await fetch(`/api/applications/track/${jobId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dry_run: dryRun, headless: false })
+      body: JSON.stringify({ status: stage })
     });
     const data = await res.json();
-    appendTerminalLine("APPLY", data.message, "success");
+    appendTerminalLine("TRACK", `✓ ${company} marked as ${stage}`, "success");
+    await fetchJobs();
+    if (AppState.selectedJobId === jobId) {
+      selectJob(jobId);
+    }
   } catch (err) {
-    appendTerminalLine("APPLY", `Application error: ${err}`, "error");
+    appendTerminalLine("TRACK", `Error updating status: ${err}`, "error");
   }
+};
+
+window.verifyJobLiveness = async function(jobId) {
+  const job = AppState.jobs.find(j => j.id === jobId);
+  if (!job) return;
+  appendTerminalLine("LIVENESS", `Probing career portal for Job #${jobId} (${job.company})...`, "info");
+  if (UI.drawerLivenessBadge) {
+    UI.drawerLivenessBadge.innerHTML = `<span>⏳ Probing carrier portal in real-time...</span>`;
+  }
+  try {
+    const res = await fetch(`/api/applications/verify-liveness/${jobId}`, { method: "POST" });
+    const data = await res.json();
+    const lv = data.liveness;
+    const isLive = lv.is_live;
+    const icon = isLive ? "🟢" : "🔴";
+    const color = isLive ? "#34d399" : "#f87171";
+    if (UI.drawerLivenessBadge) {
+      UI.drawerLivenessBadge.innerHTML = `<span style="color: ${color}; font-weight: 600;">${icon} ${escapeHtml(lv.message)}</span>`;
+    }
+    appendTerminalLine("LIVENESS", `${icon} ${job.company}: ${lv.message}`, isLive ? "success" : "error");
+    if (!isLive) {
+      await fetchJobs();
+    }
+  } catch (err) {
+    if (UI.drawerLivenessBadge) {
+      UI.drawerLivenessBadge.innerHTML = `<span style="color: var(--accent-amber);">⚠️ Probe error: ${err}</span>`;
+    }
+  }
+};
+
+function getGhostBadgeHtml(ghost) {
+  if (!ghost) return "";
+  const cls = ghost.reality_class === "fresh" ? "badge-ghost-fresh" : (ghost.reality_class === "stale" ? "badge-ghost-stale" : "badge-ghost-warning");
+  const label = ghost.reality_class === "fresh" ? "🟢 Fresh" : (ghost.reality_class === "stale" ? "🟡 Stale" : "👻 Ghost");
+  return `<span class="badge-ghost ${cls}" title="${escapeHtml(ghost.summary)}">${label}</span>`;
 }
 
 function escapeHtml(str) {
@@ -1361,14 +1902,6 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-
-// Quick 1-Click Fast Apply from table row or kanban card
-window.triggerQuickApply = function(jobId) {
-  const job = AppState.jobs.find(j => j.id === jobId);
-  const company = job ? job.company : `Job #${jobId}`;
-  appendTerminalLine("AUTOPILOT", `Triggering fast dry-run apply for ${company}...`, "info");
-  launchApplication(jobId, true);
-};
 
 // Cover Letter Studio Integration
 let selectedStudioJobId = null;

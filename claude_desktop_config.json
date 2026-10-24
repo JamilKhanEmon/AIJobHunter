@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "jobhunter-ai": {
+      "command": "/opt/anaconda3/bin/python3",
+      "args": [
+        "/Users/jamil/Desktop/job/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/jamil/Desktop/job"
+      }
+    }
+  }
+}

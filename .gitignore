@@ -1,5 +1,6 @@
 # Environment and Secrets
 config/secrets.yaml
+config/profile_resume.yaml
 .env
 .env.*
 

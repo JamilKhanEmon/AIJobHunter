@@ -16,14 +16,15 @@ class ATSEvaluator:
         self.router = router or LLMRouter()
         self.profile = settings.get_candidate_profile()
 
-    def evaluate_job(self, title: str, company: str, description: str, location: str = "Remote", remote: bool = True) -> Dict[str, Any]:
+    def evaluate_job(self, title: str, company: str, description: str, location: str = "Remote", remote: bool = True, profile: Optional[dict] = None) -> Dict[str, Any]:
         """
         Evaluates a job posting against candidate resume profile.
         Returns match score (0-100), verdict, pros, cons, missing skills, and rationale.
         """
         logger.info(f"Evaluating job '{title}' at '{company}'...")
 
-        profile_str = yaml.dump(self.profile, default_flow_style=False)
+        active_profile = profile or self.profile
+        profile_str = yaml.dump(active_profile, default_flow_style=False)
         system_prompt = JOB_EVALUATION_SYSTEM_PROMPT.replace(
             "{home_country}", settings.home_country
         )

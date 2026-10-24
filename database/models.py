@@ -30,8 +30,26 @@ class Job(Base):
     # Relationships
     evaluation = relationship("JobEvaluation", back_populates="job", uselist=False, cascade="all, delete-orphan")
     application = relationship("ApplicationRecord", back_populates="job", uselist=False, cascade="all, delete-orphan")
-
     def to_dict(self):
+        from scrapers.ghost_detector import GhostDetector
+        from ai_engine.cv_matcher import CVMatcher
+
+        ghost_data = GhostDetector.evaluate(
+            title=self.title or "",
+            company=self.company or "",
+            description=self.description or "",
+            created_at=self.created_at
+        )
+
+        cv_fit = CVMatcher.calculate_match(
+            title=self.title or "",
+            description=self.description or "",
+            company=self.company or "",
+            location=self.location or "Remote",
+            remote=bool(self.remote),
+            evaluation=self.evaluation
+        )
+
         return {
             "id": self.id,
             "external_id": self.external_id,
@@ -48,7 +66,9 @@ class Job(Base):
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "evaluation": self.evaluation.to_dict() if self.evaluation else None,
-            "application": self.application.to_dict() if self.application else None
+            "application": self.application.to_dict() if self.application else None,
+            "ghost_analysis": ghost_data,
+            "cv_match": cv_fit
         }
 
 

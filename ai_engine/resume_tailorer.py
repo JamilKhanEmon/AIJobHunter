@@ -16,12 +16,13 @@ class ResumeTailorer:
         self.router = router or LLMRouter()
         self.profile = settings.get_candidate_profile()
 
-    def generate_cover_letter(self, company: str, title: str, job_description: str) -> str:
+    def generate_cover_letter(self, company: str, title: str, job_description: str, profile: Optional[dict] = None) -> str:
         """Generates a tailored 3-paragraph cover letter for the given job."""
-        personal = self.profile.get("personal_information", {})
+        active_profile = profile or self.profile
+        personal = active_profile.get("personal_information", {})
         candidate_name = f"{personal.get('first_name', '')} {personal.get('last_name', '')}".strip() or "Candidate"
 
-        profile_str = yaml.dump(self.profile, default_flow_style=False)
+        profile_str = yaml.dump(active_profile, default_flow_style=False)
         user_prompt = COVER_LETTER_USER_TEMPLATE.format(
             candidate_name=candidate_name,
             company=company,

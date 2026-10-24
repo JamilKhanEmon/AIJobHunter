@@ -1,5 +1,6 @@
 # ===================================================================
-# Candidate Profile & Resume YAML Schema
+# Candidate Profile & Resume YAML Schema (Example Template)
+# Copy this file to config/profile_resume.yaml and update with your info.
 # ===================================================================
 
 personal_information:
@@ -71,29 +72,15 @@ experience:
       - "Automated end-to-end web scraping and data extraction pipelines processing over 2M records weekly."
       - "Mentored 6 junior engineers on microservices architecture, Dockerized deployments, and clean code practices."
 
-  - position: "Full-Stack Software Engineer"
-    company: "Innovate Software Labs"
-    location: "Remote"
-    start_date: "2020-03"
-    end_date: "2022-12"
-    current: false
-    description: >
-      Built RESTful APIs and modern web frontends for high-growth SaaS platforms.
-    responsibilities:
-      - "Built high-throughput backend services using Python FastAPI, PostgreSQL, and Redis caching."
-      - "Designed responsive, accessible web portals using React, TypeScript, and modern CSS."
-      - "Configured automated CI/CD pipelines with GitHub Actions and Docker containerization."
-
 education:
   - degree: "Bachelor of Science in Computer Science and Engineering"
     institution: "University of Engineering & Technology"
     graduation_year: "2020"
     gpa: "3.85 / 4.00"
 
-# Pre-Answered Questions for Automation Form Fillers
 screening_answers:
   legally_authorized_to_work: "Yes"
-  requires_visa_sponsorship: "Yes" # Yes for on-site foreign roles; not needed for remote roles
+  requires_visa_sponsorship: "Yes"
   current_notice_period: "2 weeks"
   target_annual_salary_usd: "85000"
   minimum_acceptable_salary_usd: "70000"

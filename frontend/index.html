@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobHunter Pro - Autonomous Multi-Agent Career Platform</title>
+  <title>AI Job Hunter - Autonomous Multi-Agent Career Platform</title>
   <meta name="description" content="Commercial-grade autonomous career copilot for ATS scraping, AI job scoring, and automated form submissions.">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
@@ -24,7 +24,7 @@
         </div>
         <div class="brand-text">
           <div class="brand-name">
-            JobHunter <span class="brand-badge">PRO</span>
+            AI Job Hunter <span class="brand-badge">PRO</span>
           </div>
           <div class="brand-role">Autonomous Career Agent</div>
         </div>
@@ -74,13 +74,16 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="agent-status-card">
+        <div class="agent-status-card" onclick="switchTab('tab-settings')" title="Click to manage AI Model &amp; API Keys" style="cursor: pointer; transition: all 0.2s ease;">
           <div class="status-row">
             <span class="status-pill">
               <span class="status-dot-pulse"></span> Agent Cluster Active
             </span>
           </div>
-          <div class="model-name" id="sidebar-active-model">ollama/llama3.3</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem;">
+            <div class="model-name" id="sidebar-active-model">groq/llama-3.3</div>
+            <span style="font-size: 0.68rem; color: var(--accent-indigo); font-weight: 600;">Edit ⚙</span>
+          </div>
         </div>
       </div>
     </aside>
@@ -102,6 +105,12 @@
         </div>
 
         <div class="header-right">
+          <!-- Quick API Key Status & Settings Launcher -->
+          <button class="btn btn-secondary btn-sm" id="btn-quick-api-key" onclick="switchTab('tab-settings')" title="Click to check or configure Inference API Keys (Groq, OpenAI, Gemini)" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.65rem; border: 1px solid rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.08); border-radius: var(--radius-sm);">
+            <span class="api-key-status-dot" id="header-api-key-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);"></span>
+            <span id="header-api-key-label" style="font-size: 0.76rem; font-weight: 600; color: #e2e8f0;">AI Key: Active</span>
+          </button>
+
           <!-- Live Auto-Pilot Daemon Beacon -->
           <div class="autopilot-status-badge" id="header-autopilot-beacon" title="Autonomous Background Daemon Running Every 12 Hours">
             <span class="autopilot-pulse-dot"></span>
@@ -215,8 +224,8 @@
                 <label for="mission-input-roles">
                   <span>💼 Target Roles (Job Titles)</span>
                 </label>
-                <input type="text" id="mission-input-roles" class="mission-input-field" placeholder="e.g. Software Engineer, AI Engineer, Full Stack, Python" value="Full Stack Engineer, AI Engineer, Software Engineer, Python Developer">
-                <span class="input-hint">Comma-separated priority job titles to search for</span>
+                <input type="text" id="mission-input-roles" class="mission-input-field" placeholder="e.g. Doctor, Civil Engineer, Accountant, Software Engineer, Nurse, UI/UX" value="Software Engineer, AI Engineer, Full Stack, Data Analyst">
+                <span class="input-hint">Any profession or role (Doctor, Engineer, Accountant, Designer, etc.)</span>
               </div>
 
               <!-- Input 2: Locations -->
@@ -321,13 +330,62 @@
             </div>
           </section>
 
+          <!-- ==============================================================
+               ACTIVE CANDIDATE CV & MATCH CENTER BANNER
+               ============================================================== -->
+          <section class="cv-match-banner" id="cv-match-banner">
+            <div class="cv-match-banner-left">
+              <div class="cv-avatar-ring">
+                <span class="cv-avatar-initial" id="banner-cv-initial">A</span>
+              </div>
+              <div class="cv-profile-meta">
+                <div class="cv-profile-header-row">
+                  <h3 class="cv-candidate-name" id="banner-candidate-name">Candidate Workspace</h3>
+                  <span class="cv-badge-active">Personalized Feed</span>
+                  <span class="cv-verified-tag">✓ CV Match Engine</span>
+                  <span class="badge" id="banner-high-match-count" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; font-weight: 700;">🌟 Live Match Active</span>
+                  <span class="badge" id="banner-avg-fit" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;">Avg: --%</span>
+                </div>
+                <div class="cv-candidate-headline" id="banner-candidate-headline">
+                  Upload your CV (PDF / DOCX) to automatically rank all vacancies for your skills
+                </div>
+                <div class="cv-meta-pills" id="banner-candidate-skills-preview">
+                  <span class="cv-pill">Python</span>
+                  <span class="cv-pill">JavaScript</span>
+                  <span class="cv-pill">React</span>
+                  <span class="cv-pill">FastAPI</span>
+                  <span class="cv-pill">Docker</span>
+                  <span class="cv-pill">SQL</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cv-match-banner-right">
+              <input type="file" id="banner-cv-file-input" accept=".pdf,.docx,.txt" style="display: none;">
+              <div class="cv-dropzone-compact" id="banner-cv-dropzone" onclick="document.getElementById('banner-cv-file-input').click();">
+                <div class="cv-dropzone-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div>
+                  <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Upload Your CV / Resume</div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted);" id="banner-cv-status-text">Drop PDF/DOCX to re-rank all jobs for your CV</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-re-rank-cv" title="Re-match all jobs against current candidate profile">
+                ⚡ Re-Score Feed
+              </button>
+            </div>
+          </section>
+
           <!-- Filter Controls -->
           <div class="filter-bar">
             <div class="filter-pills">
-              <button class="filter-pill active" data-filter-score="">All Listings</button>
-              <button class="filter-pill" data-filter-score="high">Top Fit (≥80%)</button>
-              <button class="filter-pill" data-filter-score="mid">Mid Match (60-79%)</button>
-              <button class="filter-pill" data-filter-score="unscored">Pending Evaluation</button>
+              <button class="filter-pill active" data-filter-score="">All Vacancies</button>
+              <button class="filter-pill" data-filter-score="top">🌟 Best CV Fits (≥80%)</button>
+              <button class="filter-pill" data-filter-score="good">🎯 Strong Matches (≥65%)</button>
+              <button class="filter-pill" data-filter-score="fresh">🟢 Fresh Only (≤14d)</button>
+              <button class="filter-pill" data-filter-score="ghost">👻 Ghost Radar Alerts</button>
+              <button class="filter-pill" data-filter-score="applied">📌 My Tracked Stages</button>
             </div>
 
             <div style="display: flex; gap: 0.65rem; align-items: center;">
@@ -359,12 +417,12 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th style="width: 34%;">Role & Company</th>
-                  <th style="width: 14%;">ATS Source</th>
-                  <th style="width: 16%;">Location</th>
-                  <th style="width: 16%;">Match Rating</th>
+                  <th style="width: 32%;">Role, Company & Matched Skills</th>
+                  <th style="width: 14%;">Source & Vitality</th>
+                  <th style="width: 14%;">Location</th>
+                  <th style="width: 16%;">CV Match & Ghost Status</th>
                   <th style="width: 10%;">Stage</th>
-                  <th style="text-align: right; width: 10%;">Actions</th>
+                  <th style="text-align: right; width: 14%;">Direct Actions</th>
                 </tr>
               </thead>
               <tbody id="jobs-tbody">
@@ -828,9 +886,9 @@
               <!-- Model Identifier & Clickable Presets -->
               <div style="display: flex; flex-direction: column; gap: 0.35rem;">
                 <label class="section-label">Model Identifier</label>
-                <input type="text" id="setting-model" class="select-clean" value="llama-3.3-70b-versatile" style="width: 100%; padding: 0.6rem;">
-                <div id="setting-model-presets" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem;">
-                  <!-- Dynamic Presets Populated via JS -->
+                <input type="text" id="setting-model" class="select-clean" value="llama-3.3-70b-versatile" style="width: 100%; padding: 0.6rem;" placeholder="Type model ID or click a chip below...">
+                <div id="setting-model-presets" style="display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.3rem; padding: 0.5rem; background: rgba(15,23,42,0.5); border: 1px solid rgba(99,102,241,0.15); border-radius: 8px; min-height: 40px;">
+                  <!-- Populated by fetchModelsForProvider() -->
                 </div>
               </div>
 
@@ -949,55 +1007,155 @@
           </div>
         </div>
 
-        <!-- ATS Evaluation Score Card -->
+        <!-- Ghost Job & Evergreen Reality Radar -->
         <div class="drawer-section">
-          <div class="section-label">ATS Fit Assessment</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div class="section-label" style="margin-bottom: 0;">Ghost Job & Reality Radar</div>
+            <span class="badge" id="drawer-ghost-pill" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: rgba(52, 211, 153, 0.12); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.25);">🟢 Fresh Opening</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Authenticity Index:</span>
+              <span id="drawer-ghost-score" style="font-weight: 700; font-size: 0.85rem; color: #34d399;">95%</span>
+            </div>
+            <div id="drawer-ghost-summary" style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.4rem;">
+              Recently published with genuine active requisition markers.
+            </div>
+            <ul id="drawer-ghost-signals" style="margin: 0; padding-left: 1.1rem; font-size: 0.72rem; color: var(--text-muted); line-height: 1.45;">
+              <li>No evergreen phrases detected</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- URL Liveness & Dead Link Verifier -->
+        <div class="drawer-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <div class="section-label" style="margin-bottom: 0;">Link Vitality Status</div>
+            <button class="btn btn-secondary btn-sm" id="btn-drawer-verify-live" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">
+              🩺 Verify Link
+            </button>
+          </div>
+          <div id="drawer-liveness-badge" style="font-size: 0.78rem; color: var(--text-muted); background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.45rem 0.65rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🌐 Status: Unchecked (Click 'Verify Link' to probe portal)</span>
+          </div>
+        </div>
+
+        <!-- 4-Tier CV Match Matrix -->
+        <div class="drawer-section">
+          <div class="section-label">CV Alignment Matrix (4-Tier Evaluation)</div>
           <div class="score-overview-card" id="drawer-score-card">
             <div class="gauge-circle" id="drawer-gauge">--</div>
-            <div>
-              <div class="verdict-badge" id="drawer-verdict">PENDING EVALUATION</div>
+            <div style="flex: 1;">
+              <div class="verdict-badge" id="drawer-verdict">MATCHING WITH CV...</div>
               <div class="verdict-rationale" id="drawer-rationale">
-                Run evaluation to assess technical stack overlap, dealbreakers, and qualification fit.
+                Candidate CV qualifications evaluated against vacancy requirements.
               </div>
+            </div>
+          </div>
+
+          <!-- 4-Tier Weight Progress Bars -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; margin-top: 0.65rem;">
+            <div class="breakdown-row">
+              <span class="breakdown-label">Requirements Coverage (40%)</span>
+              <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill breakdown-bar-emerald" id="bar-req" style="width: 80%;"></div></div>
+              <span id="txt-bar-req" style="font-weight: 700; font-size: 0.76rem; color: #34d399;">80%</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Tech Skills Match (30%)</span>
+              <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill breakdown-bar-indigo" id="bar-skills" style="width: 75%;"></div></div>
+              <span id="txt-bar-skills" style="font-weight: 700; font-size: 0.76rem; color: #a5b4fc;">75%</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Role & Title Fit (20%)</span>
+              <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill breakdown-bar-emerald" id="bar-title" style="width: 90%;"></div></div>
+              <span id="txt-bar-title" style="font-weight: 700; font-size: 0.76rem; color: #34d399;">90%</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Seniority Fit (10%)</span>
+              <div class="breakdown-bar-wrap"><div class="breakdown-bar-fill breakdown-bar-amber" id="bar-seniority" style="width: 85%;"></div></div>
+              <span id="txt-bar-seniority" style="font-weight: 700; font-size: 0.76rem; color: #fbbf24;">85%</span>
             </div>
           </div>
         </div>
 
-        <!-- Key Strengths -->
+        <!-- Matched Skills Chip Cloud -->
         <div class="drawer-section">
-          <div class="section-label">Key Strengths & Overlap</div>
-          <ul class="strengths-list" id="drawer-strengths">
-            <li>Awaiting evaluation</li>
-          </ul>
+          <div class="section-label">Matched Skills in Your CV</div>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;" id="drawer-matched-skills">
+            <span class="skill-chip-match">✓ Python</span>
+            <span class="skill-chip-match">✓ FastAPI</span>
+          </div>
         </div>
 
-        <!-- Identified Skill Gaps -->
+        <!-- Missing Skills Gap -->
         <div class="drawer-section">
-          <div class="section-label">Gaps or Considerations</div>
-          <ul class="gaps-list" id="drawer-gaps">
-            <li>None detected</li>
-          </ul>
+          <div class="section-label">Skill Gaps to Address</div>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;" id="drawer-missing-skills">
+            <span class="skill-chip-gap">! None detected</span>
+          </div>
         </div>
 
         <!-- AI Cover Letter Studio -->
         <div class="drawer-section">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div class="section-label">Tailored Cover Letter</div>
-            <button class="btn btn-secondary btn-sm" id="btn-generate-letter">Draft Letter</button>
+            <div style="display: flex; gap: 0.35rem;">
+              <button class="btn btn-secondary btn-sm" id="btn-generate-letter">Draft Letter</button>
+              <button class="btn btn-secondary btn-sm" id="btn-copy-letter" title="Copy to clipboard">📋 Copy</button>
+            </div>
           </div>
           <pre class="cover-letter-pre" id="drawer-cover-letter">Click 'Draft Letter' to generate a targeted letter aligned with this job.</pre>
         </div>
 
+        <!-- 1-Click Fast Autofill Helper -->
+        <div class="drawer-section" style="background: rgba(99, 102, 241, 0.05); border: 1px dashed rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+            <div class="section-label" style="color: var(--accent-indigo); margin-bottom: 0;">⚡ 1-Click Fast Fill (Portal Helper)</div>
+            <span style="font-size: 0.68rem; color: var(--text-faint);">Click chip to copy</span>
+          </div>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;" id="drawer-quick-copy-chips">
+            <!-- Populated dynamically with candidate info -->
+          </div>
+        </div>
+
+        <!-- Direct Email Application Banner -->
+        <div class="drawer-section" id="drawer-email-apply-banner" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <span style="font-size: 0.76rem; font-weight: 700; color: #34d399;">📧 HR Email Detected in Posting</span>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem;">Direct Email Job</span>
+          </div>
+          <div style="display: flex; gap: 0.45rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 0.35rem;">
+            <span id="drawer-detected-email" style="font-family: monospace; font-size: 0.78rem; color: #f1f5f9; background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px;"></span>
+            <div style="display: flex; gap: 0.35rem;">
+              <button class="btn btn-secondary btn-sm" id="btn-copy-detected-email" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">📋 Copy Email</button>
+              <a id="btn-send-email-app" class="btn btn-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; font-weight: 700; text-decoration: none; padding: 0.25rem 0.65rem; font-size: 0.72rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;" target="_blank">
+                ✉️ Open in Gmail/Mail
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application Lifecycle Stage Tracker -->
+        <div class="drawer-section">
+          <div class="section-label">Application Stage</div>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;" id="drawer-stage-buttons">
+            <button class="stage-tag-btn" data-stage="SAVED">📌 Saved</button>
+            <button class="stage-tag-btn" data-stage="APPLIED">✓ Applied</button>
+            <button class="stage-tag-btn" data-stage="INTERVIEWING">💬 Interview</button>
+            <button class="stage-tag-btn" data-stage="OFFER">🎉 Offer</button>
+            <button class="stage-tag-btn" data-stage="REJECTED">✕ Rejected</button>
+          </div>
+        </div>
+
       </div>
 
-      <div class="drawer-footer">
-        <button class="btn btn-secondary" style="flex: 1;" id="btn-drawer-dry-run">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Dry-Run Apply</span>
+      <div class="drawer-footer" style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-primary" style="flex: 2; font-weight: 700; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);" id="btn-drawer-open-portal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          <span>Apply on Career Portal ↗</span>
         </button>
-        <button class="btn btn-primary" style="flex: 1;" id="btn-drawer-live-apply">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          <span>Direct Apply</span>
+        <button class="btn btn-secondary" style="flex: 1;" id="btn-drawer-mark-applied">
+          <span>✓ Mark Applied</span>
         </button>
       </div>
     </aside>

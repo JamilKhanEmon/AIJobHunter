@@ -1,13 +1,13 @@
-# ⚡ JobHunter AI - Autonomous Multi-Agent Career Platform
+# ⚡ AI Job Hunter - Autonomous Multi-Agent Career Platform
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0%2B-red.svg?style=flat-square)](https://www.sqlalchemy.org)
-[![Selenium Stealth](https://img.shields.io/badge/Selenium-Anti--Detect%20Stealth-orange.svg?style=flat-square&logo=selenium)](https://selenium.dev)
+[![Career Intelligence](https://img.shields.io/badge/Career%20Intelligence-Ghost%20Radar%20%7C%20Liveness%20Probe-emerald.svg?style=flat-square)](#)
 [![LLM Router](https://img.shields.io/badge/AI%20Engine-Ollama%20%7C%20Groq%20%7C%20OpenAI%20%7C%20DeepSeek-purple.svg?style=flat-square)](https://ollama.ai)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-**JobHunter AI** is an enterprise-grade, end-to-end autonomous career agent. It continuously monitors top tech company career boards (Greenhouse, Lever, Ashby, Workday, LinkedIn), parses and scores incoming postings against structured candidate background profiles using LLM reasoning (ATS Fit Scoring, STAR alignment, dealbreaker filtering), generates personalized cover letters, and auto-submits applications using anti-detection browser automation with real-time telemetry streaming to a glassmorphic dashboard.
+**AI Job Hunter** is an enterprise-grade, end-to-end career intelligence and matching platform. Directly ingesting openings straight from company ATS career portals (Greenhouse, Lever, Ashby, Workday, LinkedIn), it evaluates jobs with multi-agent LLM reasoning (ATS Fit Scoring, STAR alignment, dealbreaker filtering), flags deceptive postings with a **Ghost Job & Evergreen Radar**, probes posting URL vitality in real-time, generates bespoke cover letters, and empowers applicants to apply directly on verified employer portals with structured stage tracking.
 
 ---
 
@@ -15,16 +15,19 @@
 
 ### 🚨 The Problem in Modern Tech Job Hunting
 1. **Fragmented Ecosystem**: Top tech companies do not post exclusively to generic boards. The freshest, most authentic openings exist directly on company-hosted ATS portals (Greenhouse, Lever, Ashby, Workday).
-2. **Extreme Time Investment**: Completing a single application manually takes 15–30 minutes. Candidates spend dozens of hours repeatedly typing the same work history, education, and answers to repetitive screening questions.
+2. **Ghost Jobs & Perpetual Evergreen Pipelines**: Up to 30% of online listings are "ghost jobs"—openings that companies keep open perpetually to build candidate pools without intent to hire.
 3. **The ATS "Black Box" Barrier**: 75%+ of applicants are automatically rejected by ATS parsing algorithms before a human recruiter ever sees them. Generic resumes fail keyword and qualification alignment.
-4. **Dealbreaker Traps**: Applicants frequently invest time applying to roles only to be auto-rejected hours later due to unadvertised location constraints, visa sponsorship policies, or required certifications.
+4. **Dealbreaker Traps & Expired Dead Links**: Applicants frequently invest time applying to roles only to find out the link has expired (404/filled) or fail unadvertised location and visa sponsorship rules.
+5. **The Bot Auto-Apply Trap**: Spamming hundreds of low-quality automated applications using headless browser bots triggers anti-bot bans (Cloudflare/DataDome), damages candidate reputation, and results in instant recruiter blacklisting.
 
 ### 💡 The JobHunter AI Solution
-* **Zero-Click Live Job Ingestion**: Directly connects to ATS REST APIs and public candidate feeds to ingest live job postings within minutes of being published.
+* **Direct-from-Source Live Job Ingestion**: Connects to ATS REST APIs and public candidate feeds to ingest live job postings directly from employer careers pages.
+* **Ghost Job & Evergreen Reality Radar**: Features a deterministic classifier that flags perpetual talent pools ("always hiring", "talent community") and stale churn.
+* **Link Vitality & Liveness Verifier**: Probes career portals via lightweight HTTP checks to instantly detect filled roles, closed requisitions, and 404 dead links.
 * **Pre-Screening Dealbreaker Engine**: Eliminates non-viable jobs immediately based on candidate visa requirements, citizenship, location policies, or experience thresholds.
 * **Intelligent ATS Match Scoring (0–100%)**: Evaluates candidate fit using LLMs (Ollama, Groq, DeepSeek, OpenAI) using the STAR (Situation-Task-Action-Result) framework.
 * **Tailored Document Generation**: Synthesizes custom cover letters and resume highlight bullets mapped directly to the specific job requirements.
-* **Stealth Anti-Detect Browser Automation**: Emulates human interactions with dynamic typing cadence, fills complex multi-step forms, answers bespoke screening questions using candidate memory, uploads resumes, and captures verification screenshots in safe Dry-Run mode.
+* **Direct Portal Application & Stage Tracking**: Replaces risky automated bot submissions with 1-click direct navigation to verified company portals, combined with structured application status tracking (Saved, Applied, Interviewing, Offer, Rejected).
 
 ---
 
@@ -36,7 +39,7 @@
 - [🧩 Core Subsystems & Components](#-core-subsystems--components)
   - [1. Web Scrapers & ATS Discovery Engine](#1-web-scrapers--ats-discovery-engine)
   - [2. Multi-Agent AI & LLM Routing Engine](#2-multi-agent-ai--llm-routing-engine)
-  - [3. Browser Automation & Anti-Bot Evasion Layer](#3-browser-automation--anti-bot-evasion-layer)
+  - [3. Job Verification & Reality Radar Layer](#3-job-verification--reality-radar-layer)
   - [4. Backend API & Real-time WebSockets](#4-backend-api--real-time-websockets)
   - [5. Glassmorphism Web Radar & Dashboard](#5-glassmorphism-web-radar--dashboard)
   - [6. Relational Persistence Layer](#6-relational-persistence-layer)
@@ -56,10 +59,11 @@ flowchart TB
         Dashboard["Glassmorphic Radar Dashboard"]
         LiveLogs["WebSocket Live Telemetry Stream"]
         ProfileEditor["Visual Candidate Profile & YAML Editor"]
+        GhostRadarUI["Ghost Job & Authenticity Gauges"]
     end
 
     subgraph API ["⚙️ Backend Layer (FastAPI & Uvicorn)"]
-        Router["REST API Router (/api/jobs, /api/crawlers, /api/eval)"]
+        Router["REST API Router (/api/jobs, /api/crawlers, /api/eval, /api/applications)"]
         WSManager["WebSocket Connection Hub"]
         AutoPilotSvc["AutoPilot Orchestration Service"]
     end
@@ -77,14 +81,13 @@ flowchart TB
         ATSEval["ATS Evaluator (Dealbreaker + 0-100% Fit Score)"]
         STARMatch["STAR Behavioral Experience Matcher"]
         CoverGen["Tailored Resume & Cover Letter Generator"]
-        AnswerAgent["Form Screening Q&A Agent"]
     end
 
-    subgraph Automation ["🛡️ Browser Automation Engine"]
-        StealthCDP["Anti-Detect Chrome Engine (CDP Evasion)"]
-        HumanTyping["Humanized Form Filler (Cadence Delays)"]
-        DocUploader["Dynamic Resume & Document Uploader"]
-        DryRunGuard["Safe Dry-Run Submitter & Screenshot Logger"]
+    subgraph Intelligence ["🛡️ Job Verification & Tracking Layer"]
+        GhostRadar["Ghost Job & Evergreen Reality Radar"]
+        LivenessProbe["Real-time HTTP Link Vitality Prober"]
+        PortalNavigator["Direct Employer Career Portal Navigator"]
+        LifecycleTracker["Application Stage & Follow-Up Tracker"]
     end
 
     subgraph DB ["🗄️ Database Layer"]
@@ -97,9 +100,9 @@ flowchart TB
     API -->|Persist Job Records| SQLAlchemy
     SQLAlchemy --> SQLite
     API <-->|Evaluate Job Fit| AI
-    API -->|Trigger Application Tasks| Automation
-    Automation -->|Capture Status & Screenshots| SQLAlchemy
-    Automation -.->|Telemetry Events| WSManager
+    API <-->|Analyze Signals & Liveness| Intelligence
+    Intelligence -->|Track Application Lifecycle| SQLAlchemy
+    Intelligence -.->|Telemetry Events| WSManager
     WSManager -.->|Push Real-time Log Stream| LiveLogs
 ```
 
@@ -508,6 +511,50 @@ docker compose logs -f app
 # Stop containers
 docker compose down
 ```
+
+## 🤖 Model Context Protocol (MCP) Integration
+
+JobHunter AI includes an official **Model Context Protocol (MCP)** server ([`mcp_server.py`](file:///Users/jamil/Desktop/job/mcp_server.py)) that connects seamlessly to **Claude Desktop**, **Cursor**, **Antigravity**, or remote chatbots with **zero manual tokens required**.
+
+### 🌟 Registered MCP Tools (11 Powerful Capabilities)
+
+1. **`get_my_profile`**: Returns the active candidate's extracted skills, headline, and summary.
+2. **`set_my_resume_text`**: Allows anyone to paste their CV directly in chat to dynamically recalibrate matching without altering default files.
+3. **`reset_to_default_profile`**: Resets candidate profile back to `profile_resume.yaml`.
+4. **`search_live_jobs`**: Scrapes live postings from official Greenhouse, Lever, Ashby, Workday, or LinkedIn endpoints.
+5. **`autonomous_web_discovery`**: Auto-discovers remote and sponsored jobs across global networks without specifying company tokens.
+6. **`match_jobs_with_my_cv`**: Computes deterministic 0–100% ATS fit against candidate CV and highlights matched & missing skills.
+7. **`deep_evaluate_job`**: Runs multi-agent LLM reasoning (STAR alignment, dealbreakers, pros, cons, verdict).
+8. **`verify_job_authenticity`**: Probes HTTP link vitality and evaluates Ghost Job / Evergreen markers.
+9. **`generate_tailored_cover_letter`**: Synthesizes a bespoke 3-paragraph cover letter mapped to candidate's projects.
+10. **`update_application_stage`**: Updates application tracking stage (`SAVED`, `APPLIED`, `INTERVIEWING`, `OFFER`, `REJECTED`).
+11. **`get_application_pipeline`**: Retrieves complete breakdown of all applications in progress.
+
+### 🔌 Connecting to Claude Desktop / Cursor in 30 Seconds
+
+Copy the contents of [`claude_desktop_config.json`](file:///Users/jamil/Desktop/job/claude_desktop_config.json) to your Claude Desktop configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "jobhunter-ai": {
+      "command": "/opt/anaconda3/bin/python3",
+      "args": [
+        "/Users/jamil/Desktop/job/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/jamil/Desktop/job"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop, and you can immediately converse with your Job Hunter using natural language:
+> *"Show me remote Python jobs at Stripe with 80%+ ATS score and draft a tailored cover letter for the best match."*
 
 ---
 

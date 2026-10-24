@@ -48,6 +48,38 @@ async def upload_resume_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to parse resume: {str(e)}")
 
 
+@router.post("/reparse")
+def reparse_saved_resume():
+    """Re-parses the currently stored resume (data/resume.pdf) with the active LLM."""
+    dest = DATA_DIR / "resume.pdf"
+    if not dest.exists():
+        raise HTTPException(status_code=404, detail="No resume uploaded yet. Please upload a resume first.")
+
+    try:
+        with open(dest, "rb") as f:
+            content = f.read()
+
+        manager.broadcast_sync({
+            "type": "RESUME_UPLOAD_START",
+            "message": "Re-parsing stored resume with active LLM..."
+        })
+
+        parsed = resume_parser.parse_resume(file_bytes=content, filename="resume.pdf")
+
+        manager.broadcast_sync({
+            "type": "RESUME_PARSED",
+            "message": f"Successfully re-parsed resume for {parsed.get('personal_information', {}).get('first_name', 'Candidate')}!"
+        })
+
+        return {
+            "success": True,
+            "message": "Resume re-parsed successfully with AI!",
+            "profile": parsed
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to re-parse resume: {str(e)}")
+
+
 @router.get("")
 def get_profile():
     return {
@@ -286,3 +318,187 @@ def test_settings_connection(payload: dict):
     return result
 
 
+@settings_router.post("/list-models")
+def list_provider_models(payload: dict):
+    """
+    Fetches the live list of available models from the selected provider using the given API key.
+    Falls back to a curated static list if the provider API does not support model listing.
+    """
+    import httpx
+    provider = (payload.get("provider") or "groq").lower()
+    api_key = (payload.get("api_key") or "").strip()
+
+    # Static fallback curated lists (used when provider has no models API or key is missing)
+    STATIC_FALLBACKS = {
+        "groq": [
+            {"id": "openai/gpt-oss-120b", "name": "OpenAI GPT-OSS 120B (Best Quality)", "active": True},
+            {"id": "openai/gpt-oss-20b", "name": "OpenAI GPT-OSS 20B (Ultra Fast)"},
+            {"id": "qwen/qwen3.8-27b", "name": "Qwen 3.8 27B"},
+            {"id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B Versatile"},
+            {"id": "llama-3.1-8b-instant", "name": "Llama 3.1 8B Instant"},
+            {"id": "llama-3.1-70b-versatile", "name": "Llama 3.1 70B Versatile"},
+        ],
+        "openai": [
+            {"id": "gpt-4o", "name": "GPT-4o (Best Quality)"},
+            {"id": "gpt-4o-mini", "name": "GPT-4o Mini (Fast & Cheap)", "active": True},
+            {"id": "gpt-4-turbo", "name": "GPT-4 Turbo"},
+            {"id": "o1-mini", "name": "o1 Mini (Reasoning)"},
+            {"id": "o3-mini", "name": "o3 Mini (Reasoning)"},
+        ],
+        "anthropic": [
+            {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet (Best)", "active": True},
+            {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku (Fast)"},
+            {"id": "claude-3-opus-20240229", "name": "Claude 3 Opus (Most Capable)"},
+        ],
+        "gemini": [
+            {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Fastest)", "active": True},
+            {"id": "gemini-2.0-flash-thinking-exp", "name": "Gemini 2.0 Flash Thinking"},
+            {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro"},
+            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash"},
+            {"id": "gemini-1.5-flash-8b", "name": "Gemini 1.5 Flash 8B (Nano)"},
+        ],
+        "deepseek": [
+            {"id": "deepseek-chat", "name": "DeepSeek Chat (V3)", "active": True},
+            {"id": "deepseek-reasoner", "name": "DeepSeek Reasoner (R1)"},
+        ],
+        "openrouter": [
+            {"id": "openrouter/auto", "name": "Auto Router (Best Available)", "active": True},
+            {"id": "anthropic/claude-3.5-sonnet", "name": "Claude 3.5 Sonnet"},
+            {"id": "google/gemini-2.0-flash-001", "name": "Gemini 2.0 Flash"},
+            {"id": "deepseek/deepseek-r1", "name": "DeepSeek R1 (Reasoning)"},
+            {"id": "deepseek/deepseek-chat-v3-0324", "name": "DeepSeek V3"},
+            {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama 3.3 70B"},
+            {"id": "mistralai/mistral-large-2411", "name": "Mistral Large"},
+            {"id": "qwen/qwen-2.5-72b-instruct", "name": "Qwen 2.5 72B"},
+        ],
+        "ollama": [
+            {"id": "llama3.3", "name": "Llama 3.3", "active": True},
+            {"id": "llama3.1", "name": "Llama 3.1"},
+            {"id": "mistral", "name": "Mistral"},
+            {"id": "qwen2.5", "name": "Qwen 2.5"},
+            {"id": "deepseek-r1:8b", "name": "DeepSeek R1 8B"},
+        ],
+    }
+
+    # Resolve current key from secrets if not provided in payload
+    if not api_key:
+        key_map = {
+            "groq": settings.groq_api_key,
+            "openai": settings.openai_api_key,
+            "anthropic": settings.anthropic_api_key,
+            "gemini": settings.gemini_api_key,
+            "deepseek": settings.deepseek_api_key,
+            "openrouter": settings.openrouter_api_key,
+        }
+        api_key = (key_map.get(provider) or "").strip()
+
+    # For Ollama: try to list local models
+    if provider == "ollama":
+        try:
+            ollama_host = (payload.get("ollama_host") or settings.ollama_host or "http://localhost:11434").rstrip("/")
+            with httpx.Client(timeout=5.0) as client:
+                resp = client.get(f"{ollama_host}/api/tags")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    local_models = [
+                        {"id": m["name"], "name": m["name"]}
+                        for m in data.get("models", [])
+                    ]
+                    if local_models:
+                        return {"provider": provider, "models": local_models, "source": "live"}
+        except Exception:
+            pass
+        return {"provider": provider, "models": STATIC_FALLBACKS["ollama"], "source": "fallback"}
+
+    # For Groq: use their live /openai/v1/models endpoint
+    if provider == "groq" and api_key and "your" not in api_key:
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.get(
+                    "https://api.groq.com/openai/v1/models",
+                    headers={"Authorization": f"Bearer {api_key}"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    active_ids = {m["id"] for m in data.get("data", [])}
+                    # Filter to chat-capable models only (exclude whisper, tts, vision-only)
+                    chat_models = [
+                        m for m in data.get("data", [])
+                        if not any(skip in m["id"] for skip in ["whisper", "distil-whisper", "tts", "guard"])
+                    ]
+                    models = [{"id": m["id"], "name": m["id"]} for m in sorted(chat_models, key=lambda x: x["id"])]
+                    return {"provider": provider, "models": models, "source": "live"}
+        except Exception:
+            pass
+
+    # For OpenAI: live /v1/models endpoint (filter to gpt only)
+    if provider == "openai" and api_key and "your" not in api_key:
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.get(
+                    "https://api.openai.com/v1/models",
+                    headers={"Authorization": f"Bearer {api_key}"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    gpt_models = [
+                        m for m in data.get("data", [])
+                        if any(pfx in m["id"] for pfx in ["gpt-", "o1", "o3"])
+                        and "instruct" not in m["id"]
+                    ]
+                    models = [{"id": m["id"], "name": m["id"]} for m in sorted(gpt_models, key=lambda x: x["id"], reverse=True)[:20]]
+                    return {"provider": provider, "models": models, "source": "live"}
+        except Exception:
+            pass
+
+    # For OpenRouter: live /api/v1/models endpoint
+    if provider == "openrouter" and api_key and "your" not in api_key:
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.get(
+                    "https://openrouter.ai/api/v1/models",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "HTTP-Referer": "http://localhost:8000"
+                    }
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    all_models = data.get("data", [])
+                    # Sort by context_length desc, limit to top 40 popular ones
+                    sorted_models = sorted(all_models, key=lambda x: x.get("context_length", 0), reverse=True)
+                    models = [
+                        {"id": m["id"], "name": f"{m['id']} ({m.get('context_length', 0)//1000}K ctx)"}
+                        for m in sorted_models[:40]
+                    ]
+                    return {"provider": provider, "models": models, "source": "live"}
+        except Exception:
+            pass
+
+    # For Gemini: use the REST endpoint to list models
+    if provider == "gemini" and api_key and "your" not in api_key:
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.get(
+                    f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    gen_models = [
+                        m for m in data.get("models", [])
+                        if "generateContent" in m.get("supportedGenerationMethods", [])
+                    ]
+                    models = [
+                        {"id": m["name"].replace("models/", ""), "name": m.get("displayName", m["name"])}
+                        for m in gen_models
+                    ]
+                    return {"provider": provider, "models": models, "source": "live"}
+        except Exception:
+            pass
+
+    # For Anthropic: no public models list API - use static
+    # For DeepSeek: no public models list API - use static
+
+    # Return static fallback
+    fallback = STATIC_FALLBACKS.get(provider, [])
+    return {"provider": provider, "models": fallback, "source": "fallback"}

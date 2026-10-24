@@ -2,6 +2,7 @@
 AI Evaluation & ATS Scoring API Endpoints.
 """
 
+import time
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
@@ -83,6 +84,8 @@ def evaluate_all_pending_task():
                     "verdict": res.get("verdict"),
                     "message": f"Score {res.get('score')}/100: {job.company} - {job.title}"
                 })
+                # Respect Groq Tokens Per Minute rate limit
+                time.sleep(1.0)
             except Exception as e:
                 manager.broadcast_sync({
                     "type": "EVALUATION_ERROR",

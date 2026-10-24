@@ -1,5 +1,5 @@
 app:
-  name: AI Multi-Agent Job Hunter
+  name: AI Job Hunter
   version: 1.0.0
   env: development
   port: 8000
@@ -59,23 +59,49 @@ ats_targets:
   - scaleai
   - discord
   - airbnb
+  - databricks
+  - supabase
+  - vercel
+  - linear
+  - cloudflare
+  - notion
+  - grafana
+  - postman
+  - mongodb
+  - elastic
+  - gitlab
+  - canonical
+  - coinbase
+  - kraken
   lever:
   - palantir
   - spotify
   - netflix
+  - lyft
+  - modern-treasury
+  - clearbit
+  - plaid
+  - coursera
+  - automattic
   ashby:
   - retool
   - openai
   - ramp
   - cursor
+  - perplexity
+  - mistral
+  - replicate
+  - together
+  - vllm
+  - modal
 ai_router:
   active_provider: groq
-  model_name: deepseek-r1-distill-llama-70b
+  model_name: openai/gpt-oss-20b
   groq_base_url: https://api.groq.com/openai/v1
   ollama_base_url: http://localhost:11434
   temperature: 0.2
-  max_tokens: 2048
-  fallback_to_mock: true
+  max_tokens: 4096
+  fallback_to_mock: false
 automation:
   headless: false
   slow_mo_ms: 120
