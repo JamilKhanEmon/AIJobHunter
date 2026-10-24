@@ -632,23 +632,34 @@ async function fetchProfile() {
         if (elSum && p.summary) elSum.value = p.summary.trim();
 
         // Update Top Candidate CV Match Banner
-        const fullName = `${info.first_name || "Alex"} ${info.last_name || "Rivera"}`.trim();
+        const fullName = `${info.first_name || ""} ${info.last_name || ""}`.trim() || "Candidate Profile";
         if (UI.bannerCandidateName) UI.bannerCandidateName.textContent = fullName;
         if (UI.bannerCvInitial) UI.bannerCvInitial.textContent = fullName.charAt(0).toUpperCase();
         if (UI.bannerCandidateHeadline && info.headline) {
           UI.bannerCandidateHeadline.textContent = info.headline;
         }
-        if (UI.bannerCandidateSkillsPreview && p.skills) {
-          const allSkills = [
-            ...(p.skills.languages || []),
-            ...(p.skills.frameworks_and_backend || []),
-            ...(p.skills.ai_and_data || [])
-          ];
-          if (allSkills.length) {
-            UI.bannerCandidateSkillsPreview.innerHTML = allSkills.slice(0, 7)
-              .map(s => `<span class="cv-pill">${escapeHtml(s)}</span>`).join("") +
-              (allSkills.length > 7 ? `<span class="cv-pill" style="color: var(--accent-indigo); font-weight: 700;">+${allSkills.length - 7} more</span>` : "");
-          }
+        const badgeFits = document.getElementById("banner-high-match-count");
+        if (badgeFits) {
+          badgeFits.textContent = "Personalized Match";
+          badgeFits.style.display = "inline-flex";
+        }
+      } else {
+        // Multi-User Guest / Unregistered State
+        const userObj = data.user || AppState.currentUser;
+        if (UI.bannerCandidateName) {
+          UI.bannerCandidateName.textContent = userObj ? (userObj.full_name || userObj.username) : "Candidate Workspace";
+        }
+        if (UI.bannerCvInitial) {
+          UI.bannerCvInitial.textContent = userObj ? (userObj.full_name || userObj.username || "U").charAt(0).toUpperCase() : "👤";
+        }
+        if (UI.bannerCandidateHeadline) {
+          UI.bannerCandidateHeadline.textContent = userObj 
+            ? "Upload your CV (PDF / DOCX) to rank all vacancies for your skills"
+            : "Sign in or upload your CV to personalize job matches and rank vacancies";
+        }
+        const badgeFits = document.getElementById("banner-high-match-count");
+        if (badgeFits) {
+          badgeFits.textContent = userObj ? "Profile Ready" : "Multi-User Ready";
         }
       }
     }

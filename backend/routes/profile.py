@@ -94,11 +94,13 @@ async def upload_resume_file(
 
 @router.get("")
 def get_profile(user: Optional[User] = Depends(get_current_user)):
-    """Returns candidate profile for the active authenticated user, or local default if guest."""
+    """Returns candidate profile for the active authenticated user, or None if guest in multi-user environment."""
     if user and user.profile:
         profile_data = user.profile.to_candidate_schema()
+    elif user:
+        profile_data = None
     else:
-        profile_data = settings.get_candidate_profile()
+        profile_data = None
 
     return {
         "profile": profile_data,
