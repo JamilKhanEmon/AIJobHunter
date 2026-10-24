@@ -5,39 +5,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Dark Canvas Colors */
-  --bg-app: #080a0f;
-  --bg-sidebar: #0b0e14;
-  --bg-card: #0f141e;
-  --bg-card-hover: #141b28;
-  --bg-input: #121824;
-  --bg-elevated: #161e2e;
+  /* High-End Executive Midnight Slate Palette */
+  --bg-app: #090d16;
+  --bg-sidebar: #0d1322;
+  --bg-card: #121929;
+  --bg-card-hover: #192338;
+  --bg-input: #0a0f1d;
+  --bg-elevated: #162035;
 
   /* Crisp 1px Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.1);
-  --border-focus: rgba(99, 102, 241, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-focus: #3b82f6;
 
   /* Primary Brand Accents */
-  --accent-indigo: #6366f1;
-  --accent-indigo-hover: #4f46e5;
-  --accent-glow: rgba(99, 102, 241, 0.25);
-  --accent-cyan: #06b6d4;
+  --accent-indigo: #4f46e5;
+  --accent-blue: #2563eb;
+  --accent-blue-hover: #1d4ed8;
+  --accent-glow: rgba(37, 99, 235, 0.28);
+  --accent-cyan: #0284c7;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
 
   /* Typography Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-faint: #475569;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
 
   /* Shadows & Depth */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
-  --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 36px -4px rgba(0, 0, 0, 0.65);
+  --shadow-drawer: -8px 0 36px rgba(0, 0, 0, 0.75);
 
   /* Radii */
   --radius-xs: 4px;
@@ -2027,6 +2028,538 @@ tr:hover .row-actions-group {
   box-shadow: 0 0 18px rgba(99, 102, 241, 0.3);
   transform: translateY(-2px);
 }
+
+/* ===================================================================
+   WORLD-CLASS JOB PORTAL HERO SEARCH (LinkedIn & Indeed Style)
+   =================================================================== */
+.portal-hero-search {
+  background: radial-gradient(130% 120% at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(13, 19, 34, 0.95) 70%), #0c1220;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-hero-headings {
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.portal-hero-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin-bottom: 0.35rem;
+}
+
+.portal-hero-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 780px;
+}
+
+.portal-search-bar {
+  display: flex;
+  align-items: center;
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  padding: 0.35rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  gap: 0.35rem;
+}
+
+.portal-search-bar:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.portal-search-field {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 0.6rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.portal-search-icon {
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.portal-search-field input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.portal-search-field input::placeholder {
+  color: #64748b;
+}
+
+.portal-search-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.portal-search-btn {
+  padding: 0.65rem 1.35rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.portal-search-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+  transform: translateY(-1px);
+}
+
+.portal-quick-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-chips-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-right: 0.25rem;
+}
+
+.portal-tag-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.portal-tag-chip:hover {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ===================================================================
+   JOB PORTAL CARDS VIEW (.cards-panel & .job-portal-card)
+   =================================================================== */
+.cards-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.15rem;
+  margin-bottom: 2rem;
+}
+
+.job-portal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.job-portal-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.25);
+  transform: translateY(-2px);
+}
+
+.job-portal-card.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: #151e33;
+}
+
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.card-company-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.card-company-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-company-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-company-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.card-company-deadline {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.card-scores-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.card-job-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.35;
+  transition: color 0.18s ease;
+}
+
+.job-portal-card:hover .card-job-title {
+  color: #60a5fa;
+}
+
+.card-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.card-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.73rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.card-skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.card-snippet {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-actions-group {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* ===================================================================
+   MOBILE NAVIGATION & RESPONSIVE LAYOUT (< 768px & < 1024px)
+   =================================================================== */
+.mobile-nav-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.5rem;
+}
+
+.mobile-sidebar-close {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 99;
+}
+
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(13, 19, 34, 0.96);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 90;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-bottom-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  gap: 0.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 25%;
+}
+
+.mobile-bottom-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-bottom-item.active {
+  color: #38bdf8;
+}
+
+.mobile-bottom-item:active {
+  transform: scale(0.95);
+}
+
+/* Tablet & Mobile Breakpoints */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 230px;
+  }
+  .cards-panel {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .app-layout {
+    height: auto;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-close {
+    display: block;
+  }
+
+  /* Off-canvas sidebar */
+  aside.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    height: 100vh;
+    background: #0d1322;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+  }
+
+  aside.sidebar.open {
+    transform: translateX(0);
+  }
+
+  .mobile-backdrop.open {
+    display: block;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  main.workspace {
+    width: 100vw;
+    margin-left: 0;
+    padding-bottom: 80px; /* Space for mobile bottom bar */
+  }
+
+  .workspace-header {
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  .workspace-content {
+    padding: 1rem 0.85rem;
+  }
+
+  .search-box {
+    display: none; /* Hero search bar is used instead */
+  }
+
+  #btn-purge-dummy, #btn-batch-eval {
+    display: none;
+  }
+
+  .portal-hero-search {
+    padding: 1.25rem 1rem;
+  }
+
+  .portal-hero-title {
+    font-size: 1.3rem;
+  }
+
+  .portal-search-bar {
+    flex-direction: column;
+    padding: 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .portal-search-divider {
+    display: none;
+  }
+
+  .portal-search-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .portal-quick-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .metrics-ribbon {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+
+  .cards-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filter-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Responsive Bottom Sheet Drawer on Mobile */
+  aside.drawer {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    max-height: 88vh;
+    border-radius: 20px 20px 0 0;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 101;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+  }
+
+  aside.drawer.open {
+    transform: translateY(0);
+  }
+}
+
 
 
 

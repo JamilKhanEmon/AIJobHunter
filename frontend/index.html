@@ -2,9 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Job Hunter - Autonomous Multi-Agent Career Platform</title>
-  <meta name="description" content="Commercial-grade autonomous career copilot for ATS scraping, AI job scoring, and automated form submissions.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>AI Job Hunter - Next-Gen Tech Career &amp; Job Discovery Portal</title>
+  <meta name="description" content="Commercial-grade autonomous career copilot. Discover top software engineering, AI, and developer jobs across Bangladesh (Bdjobs) and worldwide remote platforms with instant AI resume fit scoring.">
+  <meta name="keywords" content="jobs, tech jobs, bangladesh jobs, bdjobs, software engineer jobs, remote jobs, AI jobs, python developer, full stack, career platform, resume matching, ATS discovery">
+  <meta name="author" content="AI Job Hunter">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="http://localhost:8000/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://localhost:8000/">
+  <meta property="og:title" content="AI Job Hunter - Discover Tech, Engineering &amp; Remote Jobs">
+  <meta property="og:description" content="Discover verified tech and engineering jobs in Bangladesh and worldwide. AI resume match scoring, cover letter generator, and autonomous job radar.">
+  <meta property="og:site_name" content="AI Job Hunter">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Job Hunter - Next-Gen Career &amp; Job Discovery Portal">
+  <meta name="twitter:description" content="Discover verified tech and engineering jobs in Bangladesh and worldwide with instant AI resume fit scoring.">
+
+  <!-- Structured Data: Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AI Job Hunter",
+    "url": "http://localhost:8000/",
+    "description": "Autonomous AI career platform for job discovery in Bangladesh and worldwide remote markets.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "http://localhost:8000/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 </head>
@@ -12,10 +50,13 @@
 
   <div class="app-layout">
 
+    <!-- Mobile Backdrop -->
+    <div class="mobile-backdrop" id="mobile-backdrop" onclick="toggleMobileNav(false)"></div>
+
     <!-- ==============================================================
-         LEFT NAVIGATION SIDEBAR (Linear / Raycast Style)
+         LEFT NAVIGATION SIDEBAR (Professional Responsive Drawer)
          ============================================================== -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="app-sidebar">
       <div class="sidebar-header">
         <div class="brand-symbol">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -28,6 +69,8 @@
           </div>
           <div class="brand-role">Autonomous Career Agent</div>
         </div>
+        <!-- Mobile Sidebar Close Button -->
+        <button class="mobile-sidebar-close" id="btn-close-mobile-nav" onclick="toggleMobileNav(false)" aria-label="Close menu">✕</button>
       </div>
 
       <nav class="sidebar-nav">
@@ -105,6 +148,9 @@
       <!-- Top Bar -->
       <header class="workspace-header">
         <div class="header-left">
+          <button class="mobile-nav-toggle" id="btn-mobile-nav" onclick="toggleMobileNav(true)" aria-label="Open Navigation Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <div class="page-title" id="page-headline">Job Radar & Discovery</div>
           <div class="search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -165,6 +211,44 @@
 
         <!-- TAB 1: JOB RADAR VIEW -->
         <div class="tab-pane active" id="tab-radar">
+
+          <!-- World-Class Job Portal Search Hero (SEO & User Centric) -->
+          <section class="portal-hero-search" role="search" aria-label="Job Search Engine">
+            <div class="portal-hero-headings">
+              <h1 class="portal-hero-title">Find Your Next Tech &amp; Engineering Role</h1>
+              <p class="portal-hero-subtitle">
+                Explore thousands of verified postings across <strong>Bangladesh (Bdjobs)</strong>, LinkedIn, and global remote engineering platforms with instant AI resume fit scoring.
+              </p>
+            </div>
+
+            <!-- Unified Search Bar -->
+            <div class="portal-search-bar">
+              <div class="portal-search-field">
+                <svg class="portal-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="portal-hero-query" placeholder="Job title, skills, or company (e.g. Python, Full Stack)..." aria-label="Job title or skills">
+              </div>
+              <div class="portal-search-divider"></div>
+              <div class="portal-search-field">
+                <svg class="portal-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <input type="text" id="portal-hero-location" placeholder="Location (e.g. Bangladesh, Dhaka, Remote)..." value="Bangladesh, Dhaka, Remote" aria-label="Location">
+              </div>
+              <button class="btn btn-primary portal-search-btn" id="btn-portal-search-submit" title="Click to search live jobs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Find Jobs</span>
+              </button>
+            </div>
+
+            <!-- Quick Filter Chips -->
+            <div class="portal-quick-chips">
+              <span class="portal-chips-label">Popular:</span>
+              <button class="portal-tag-chip" onclick="quickFilterTag('All')">🔥 All Jobs</button>
+              <button class="portal-tag-chip" onclick="quickFilterTag('bdjobs')">🇧🇩 Bdjobs (Bangladesh)</button>
+              <button class="portal-tag-chip" onclick="quickFilterTag('Remote')">🌐 Remote Worldwide</button>
+              <button class="portal-tag-chip" onclick="quickFilterTag('Python')">🐍 Python / AI</button>
+              <button class="portal-tag-chip" onclick="quickFilterTag('Full Stack')">⚡ Full Stack</button>
+              <button class="portal-tag-chip" onclick="quickFilterTag('top')">⭐ Best Fit (≥80%)</button>
+            </div>
+          </section>
 
           <!-- Key Metrics Ribbon -->
           <section class="metrics-ribbon">
@@ -412,13 +496,17 @@
             </div>
 
             <div style="display: flex; gap: 0.65rem; align-items: center;">
-              <!-- View Switcher -->
+              <!-- View Switcher (Cards / Table / Kanban) -->
               <div class="view-segmented-control">
-                <button class="view-toggle-btn active" id="btn-view-list" onclick="setMasterView('list')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  <span>List</span>
+                <button class="view-toggle-btn active" id="btn-view-cards" onclick="setMasterView('cards')" title="Job Portal Cards View">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                  <span>Cards</span>
                 </button>
-                <button class="view-toggle-btn" id="btn-view-kanban" onclick="setMasterView('kanban')">
+                <button class="view-toggle-btn" id="btn-view-list" onclick="setMasterView('list')" title="Compact Data Table">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  <span>Table</span>
+                </button>
+                <button class="view-toggle-btn" id="btn-view-kanban" onclick="setMasterView('kanban')" title="Application Pipeline">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
                   <span>Kanban</span>
                 </button>
@@ -426,18 +514,26 @@
 
               <select class="select-clean" id="filter-ats-source">
                 <option value="">All ATS Platforms</option>
+                <option value="bdjobs">Bdjobs (Bangladesh)</option>
+                <option value="linkedin">LinkedIn</option>
                 <option value="greenhouse">Greenhouse</option>
                 <option value="lever">Lever</option>
                 <option value="ashby">Ashby</option>
                 <option value="workday">Workday</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="bdjobs">Bdjobs (Bangladesh)</option>
               </select>
             </div>
           </div>
 
+          <!-- Master Job Cards Grid (Portal Style - Default) -->
+          <div class="cards-panel" id="cards-view-panel">
+            <!-- Dynamically populated by renderJobCards in app.js -->
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem;">
+              Syncing live job vacancies...
+            </div>
+          </div>
+
           <!-- Master Data Grid (List View) -->
-          <div class="table-panel" id="table-view-panel">
+          <div class="table-panel" id="table-view-panel" style="display: none;">
             <table class="data-table">
               <thead>
                 <tr>
@@ -1361,6 +1457,28 @@
       </form>
     </div>
   </div>
+
+  <!-- ==============================================================
+       MOBILE BOTTOM NAVIGATION BAR (iOS / Android Native Feel)
+       ============================================================== -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button class="mobile-bottom-item active" id="mob-nav-radar" onclick="switchTab('tab-radar'); toggleMobileNav(false);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+      <span>Jobs</span>
+    </button>
+    <button class="mobile-bottom-item" id="mob-nav-kanban" onclick="switchTab('tab-kanban'); toggleMobileNav(false);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+      <span>Pipeline</span>
+    </button>
+    <button class="mobile-bottom-item" id="mob-nav-profile" onclick="switchTab('tab-profile'); toggleMobileNav(false);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>My CV</span>
+    </button>
+    <button class="mobile-bottom-item" id="mob-nav-auth" onclick="switchTab('tab-auth'); toggleMobileNav(false);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Account</span>
+    </button>
+  </nav>
 
   <script src="/js/app.js"></script>
 </body>

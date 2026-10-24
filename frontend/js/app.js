@@ -383,6 +383,7 @@ function setupAuthUI() {
       await refreshAllData();
       appendTerminalLine("AUTH", "You have signed out.", "info");
     });
+  }
 }
 
 // Bootstrap Application
@@ -393,6 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAuthUI();
   checkAuthStatus();
   setupEventListeners();
+  if (window.setMasterView) window.setMasterView("cards");
   refreshAllData();
 });
 
@@ -420,6 +422,20 @@ window.switchTab = function(tabId) {
   };
   const hl = document.getElementById("page-headline");
   if (hl && titleMap[tabId]) hl.textContent = titleMap[tabId];
+
+  // Sync Mobile Bottom Navigation
+  const mobMap = {
+    "tab-radar": "mob-nav-radar",
+    "tab-kanban": "mob-nav-kanban",
+    "tab-profile": "mob-nav-profile",
+    "tab-auth": "mob-nav-auth"
+  };
+  document.querySelectorAll(".mobile-bottom-item").forEach(b => b.classList.remove("active"));
+  const activeMob = document.getElementById(mobMap[tabId]);
+  if (activeMob) activeMob.classList.add("active");
+
+  // Close mobile sidebar drawer if open
+  if (window.toggleMobileNav) window.toggleMobileNav(false);
 };
 
 function setupNavigation() {
@@ -939,25 +955,83 @@ function getCompanyGradient(company) {
   return `linear-gradient(135deg, hsl(${h1}, 75%, 45%) 0%, hsl(${h2}, 80%, 35%) 100%)`;
 }
 
-// Master View Toggle (List vs Kanban)
+// Master View Toggle (Cards vs List vs Kanban)
 window.setMasterView = function(view) {
+  const cardsPanel = document.getElementById("cards-view-panel");
   const tablePanel = document.getElementById("table-view-panel");
   const kanbanContainer = document.getElementById("kanban-container");
+  const btnCards = document.getElementById("btn-view-cards");
   const btnList = document.getElementById("btn-view-list");
   const btnKanban = document.getElementById("btn-view-kanban");
 
+  [btnCards, btnList, btnKanban].forEach(b => b && b.classList.remove("active"));
+
   if (view === "kanban") {
+    if (cardsPanel) cardsPanel.style.display = "none";
     if (tablePanel) tablePanel.style.display = "none";
     if (kanbanContainer) kanbanContainer.classList.add("active");
-    if (btnList) btnList.classList.remove("active");
     if (btnKanban) btnKanban.classList.add("active");
     renderKanbanBoard();
-  } else {
+  } else if (view === "list") {
+    if (cardsPanel) cardsPanel.style.display = "none";
     if (tablePanel) tablePanel.style.display = "block";
     if (kanbanContainer) kanbanContainer.classList.remove("active");
     if (btnList) btnList.classList.add("active");
-    if (btnKanban) btnKanban.classList.remove("active");
+  } else {
+    // Default: 'cards'
+    if (cardsPanel) cardsPanel.style.display = "grid";
+    if (tablePanel) tablePanel.style.display = "none";
+    if (kanbanContainer) kanbanContainer.classList.remove("active");
+    if (btnCards) btnCards.classList.add("active");
   }
+};
+
+window.toggleMobileNav = function(open) {
+  const sidebar = document.getElementById("app-sidebar");
+  const backdrop = document.getElementById("mobile-backdrop");
+  if (open === undefined) {
+    const isOpen = sidebar && sidebar.classList.contains("open");
+    open = !isOpen;
+  }
+  if (sidebar) {
+    if (open) sidebar.classList.add("open");
+    else sidebar.classList.remove("open");
+  }
+  if (backdrop) {
+    if (open) backdrop.classList.add("open");
+    else backdrop.classList.remove("open");
+  }
+};
+
+window.quickFilterTag = function(tag) {
+  const heroInput = document.getElementById("portal-hero-query");
+  const globalInput = document.getElementById("global-search-input");
+  const sourceSelect = document.getElementById("filter-ats-source");
+
+  if (tag === "All") {
+    AppState.activeFilter.query = "";
+    AppState.activeFilter.source = "";
+    AppState.activeFilter.scoreCategory = "";
+    if (heroInput) heroInput.value = "";
+    if (globalInput) globalInput.value = "";
+    if (sourceSelect) sourceSelect.value = "";
+    document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+    const allPill = document.querySelector('.filter-pill[data-filter-score=""]');
+    if (allPill) allPill.classList.add("active");
+  } else if (tag === "bdjobs") {
+    AppState.activeFilter.source = "bdjobs";
+    if (sourceSelect) sourceSelect.value = "bdjobs";
+  } else if (tag === "top") {
+    AppState.activeFilter.scoreCategory = "top";
+    document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+    const topPill = document.querySelector('.filter-pill[data-filter-score="top"]');
+    if (topPill) topPill.classList.add("active");
+  } else {
+    AppState.activeFilter.query = tag;
+    if (heroInput) heroInput.value = tag;
+    if (globalInput) globalInput.value = tag;
+  }
+  renderDataGrid();
 };
 
 // Render Master Data Grid (CV-Centric Personal Matchmaker)
@@ -1021,8 +1095,12 @@ function renderDataGrid() {
         </td>
       </tr>
     `;
+    renderJobCards([]);
     return;
   }
+
+  // Render Job Portal Cards View
+  renderJobCards(filtered);
 
   UI.jobsTbody.innerHTML = filtered.map(job => {
     const isSelected = job.id === AppState.selectedJobId;
@@ -1110,6 +1188,92 @@ function renderDataGrid() {
           </div>
         </td>
       </tr>
+    `;
+  }).join("");
+}
+
+// Render Job Portal Cards View (LinkedIn / Modern Portal Layout)
+function renderJobCards(jobs) {
+  const container = document.getElementById("cards-view-panel");
+  if (!container) return;
+
+  if (!jobs || jobs.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 4rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔍</div>
+        <h3 style="color: #fff; margin-bottom: 0.35rem; font-weight: 700;">No matching vacancies found</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">Try adjusting your keyword filter or click "Find Jobs" to discover fresh postings.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = jobs.map(job => {
+    const isSelected = job.id === AppState.selectedJobId;
+    const initial = (job.company || "C").charAt(0).toUpperCase();
+    const s = (job.source || "bdjobs").toLowerCase();
+    const sourceClass = `badge-${s}`;
+    const cv = job.cv_match || { score: 75, verdict_label: "Match" };
+    const cvScore = cv.score;
+    const scoreClass = cvScore >= 80 ? "score-high" : (cvScore >= 65 ? "score-mid" : "score-low");
+    const ghost = job.ghost_analysis;
+    const ghostBadge = getGhostBadgeHtml(ghost);
+
+    const matchedChips = (cv.matched_skills || []).slice(0, 3)
+      .map(sk => `<span class="skill-chip-match">✓ ${escapeHtml(sk)}</span>`).join("");
+    const missingChips = (cv.missing_skills || []).slice(0, 2)
+      .map(sk => `<span class="skill-chip-gap">! ${escapeHtml(sk)}</span>`).join("");
+
+    const stage = job.application ? job.application.status : (job.status || "DISCOVERED");
+    const salaryText = job.salary_raw || "Negotiable";
+    const locText = job.location || (job.remote ? "Remote" : "Bangladesh");
+
+    // Clean snippet
+    const rawSnippet = (job.description || "").replace(/---.*?---/g, "").slice(0, 160);
+
+    return `
+      <article class="job-portal-card ${isSelected ? 'selected' : ''}" onclick="selectJob(${job.id})" role="article" aria-label="${escapeHtml(job.title)} at ${escapeHtml(job.company)}">
+        <div class="card-top-row">
+          <div class="card-company-group">
+            <div class="card-company-avatar" style="background: ${getCompanyGradient(job.company)}; color: #fff;">${initial}</div>
+            <div class="card-company-info">
+              <span class="card-company-name">${escapeHtml(job.company)}</span>
+              <span class="card-company-deadline">${escapeHtml(locText)}</span>
+            </div>
+          </div>
+          <div class="card-scores-group">
+            <span class="score-pill ${scoreClass}">${cvScore}% Fit</span>
+            ${ghostBadge}
+          </div>
+        </div>
+
+        <h3 class="card-job-title">${escapeHtml(job.title)}</h3>
+
+        <div class="card-badges-row">
+          <span class="badge ${sourceClass}">${escapeHtml(job.source || 'bdjobs').toUpperCase()}</span>
+          <span class="card-meta-pill">📍 ${escapeHtml(locText)}</span>
+          <span class="card-meta-pill">💰 ${escapeHtml(salaryText)}</span>
+          ${job.remote ? '<span class="card-meta-pill" style="color: #34d399;">🌐 Remote</span>' : '<span class="card-meta-pill">🏢 On-site</span>'}
+        </div>
+
+        ${matchedChips || missingChips ? `<div class="card-skills-row">${matchedChips}${missingChips}</div>` : ''}
+
+        ${rawSnippet ? `<div class="card-snippet">${escapeHtml(rawSnippet)}...</div>` : ''}
+
+        <div class="card-footer-row">
+          <span style="font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; color: var(--text-faint);">
+            Stage: ${escapeHtml(stage)}
+          </span>
+          <div class="card-actions-group">
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openCoverLetterStudioForJob(${job.id});" title="Generate AI Cover Letter">
+              AI Letter
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCareerPortal(${job.id});" style="background: linear-gradient(135deg, #2563eb, #4f46e5); border: none;">
+              Apply ↗
+            </button>
+          </div>
+        </div>
+      </article>
     `;
   }).join("");
 }
@@ -1375,8 +1539,48 @@ function closeDrawer() {
 function setupEventListeners() {
   UI.btnCloseDrawer.addEventListener("click", closeDrawer);
 
+  // Portal Hero Search Bar (Modern Unified Search)
+  const portalHeroQuery = document.getElementById("portal-hero-query");
+  const portalHeroLoc = document.getElementById("portal-hero-location");
+  const btnPortalSearch = document.getElementById("btn-portal-search-submit");
+
+  if (portalHeroQuery) {
+    portalHeroQuery.addEventListener("input", (e) => {
+      AppState.activeFilter.query = e.target.value;
+      if (UI.globalSearchInput) UI.globalSearchInput.value = e.target.value;
+      renderDataGrid();
+    });
+
+    portalHeroQuery.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && btnPortalSearch) {
+        btnPortalSearch.click();
+      }
+    });
+  }
+
+  if (btnPortalSearch) {
+    btnPortalSearch.addEventListener("click", () => {
+      const q = portalHeroQuery ? portalHeroQuery.value.trim() : "";
+      const loc = portalHeroLoc ? portalHeroLoc.value.trim() : "";
+      if (loc && document.getElementById("mission-input-locations")) {
+        document.getElementById("mission-input-locations").value = loc;
+      }
+      if (q && document.getElementById("mission-input-roles")) {
+        document.getElementById("mission-input-roles").value = q;
+      }
+      // Trigger instant on-demand search
+      const btnMasterAutopilot = document.getElementById("btn-master-autopilot");
+      if (btnMasterAutopilot) {
+        btnMasterAutopilot.click();
+      } else {
+        renderDataGrid();
+      }
+    });
+  }
+
   UI.globalSearchInput.addEventListener("input", (e) => {
     AppState.activeFilter.query = e.target.value;
+    if (portalHeroQuery) portalHeroQuery.value = e.target.value;
     renderDataGrid();
   });
 
