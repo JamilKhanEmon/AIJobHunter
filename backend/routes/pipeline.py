@@ -9,19 +9,32 @@ from database.connection import get_db, SessionLocal
 from database.repository import JobRepository
 from backend.services.autopilot import autopilot_service
 
+from backend.auth import get_current_user
+from database.models import User
+
 router = APIRouter(prefix="/api/pipeline", tags=["Pipeline"])
 
 
 @router.post("/autopilot")
-def trigger_autopilot(background_tasks: BackgroundTasks):
+def trigger_autopilot(
+    background_tasks: BackgroundTasks,
+    user: Optional[User] = Depends(get_current_user)
+):
     """
-    Triggers the 1-Click Master Auto-Pilot Pipeline:
+    Triggers the 1-Click Master Auto-Pilot Pipeline on-demand:
     1. Prunes expired/stale leads from database.
     2. Autonomously discovers fresh jobs (Bangladesh & Remote) with ZERO manual inputs.
-    3. Strictly enforces posting date freshness (<= 7 days).
-    4. Evaluates all new jobs with Groq Cloud LLM for match score and visa mobility.
+    3. Strictly enforces posting date freshness (<= 5 days).
+    4. Evaluates all new jobs with LLM for match score against active user profile.
     """
-    background_tasks.add_task(autopilot_service.execute_full_cycle)
+    candidate_profile = user.profile.to_candidate_schema() if user and user.profile else None
+    user_id = user.id if user else None
+
+    background_tasks.add_task(
+        autopilot_service.execute_full_cycle,
+        profile=candidate_profile,
+        user_id=user_id
+    )
     return {
         "success": True,
         "message": "Auto-Pilot Pipeline activated! Pruning expired leads, discovering fresh jobs, and running AI evaluation..."
@@ -29,26 +42,35 @@ def trigger_autopilot(background_tasks: BackgroundTasks):
 
 
 @router.post("/instant-run")
-def trigger_instant_run(background_tasks: BackgroundTasks, payload: Optional[dict] = None):
+def trigger_instant_run(
+    background_tasks: BackgroundTasks,
+    payload: Optional[dict] = None,
+    user: Optional[User] = Depends(get_current_user)
+):
     """
     ⚡ Instant Run Now:
-    Runs an immediate autonomous discovery with user-specified roles & locations,
-    strictly filters freshness (<= 7 days), and auto-evaluates with Groq Cloud AI.
+    Runs an immediate on-demand autonomous discovery with user-specified roles & locations,
+    strictly filters freshness (<= 5 days), and auto-evaluates against the active user's CV.
     """
     from config.settings import settings
     roles = None
     locations = None
-    max_age = 7
+    max_age = 5
     if payload:
         roles = payload.get("roles")
         locations = payload.get("locations")
-        max_age = int(payload.get("max_age_days", 7))
+        max_age = int(payload.get("max_age_days", 5))
+
+    candidate_profile = user.profile.to_candidate_schema() if user and user.profile else None
+    user_id = user.id if user else None
 
     background_tasks.add_task(
         autopilot_service.execute_full_cycle,
         max_posting_age_days=max_age,
         roles=roles,
-        locations=locations
+        locations=locations,
+        profile=candidate_profile,
+        user_id=user_id
     )
     return {
         "success": True,
@@ -59,7 +81,7 @@ def trigger_instant_run(background_tasks: BackgroundTasks, payload: Optional[dic
 
 
 @router.post("/prune")
-def trigger_prune(max_age_days: int = 14, db: Session = Depends(get_db)):
+def trigger_prune(max_age_days: int = 5, db: Session = Depends(get_db)):
     """Prunes expired job leads older than max_age_days."""
     repo = JobRepository(db)
     pruned_count = repo.prune_expired_jobs(max_age_days=max_age_days)

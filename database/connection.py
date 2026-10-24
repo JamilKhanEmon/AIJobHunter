@@ -31,3 +31,12 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Ensure new columns exist on legacy SQLite databases without wiping data
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        for table, col in [("jobs", "user_id"), ("applications", "user_id")]:
+            try:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} INTEGER"))
+                conn.commit()
+            except Exception:
+                pass # Column already exists

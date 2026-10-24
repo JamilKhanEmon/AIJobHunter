@@ -40,9 +40,9 @@ class JobRepository:
             q = q.filter((Job.title.ilike(search_fmt)) | (Job.company.ilike(search_fmt)))
         return q.order_by(Job.id.desc()).limit(limit).all()
 
-    def prune_expired_jobs(self, max_age_days: int = 14) -> int:
+    def prune_expired_jobs(self, max_age_days: int = 5) -> int:
         """
-        Prunes outdated job listings older than max_age_days.
+        Prunes outdated job listings older than max_age_days (Default: 5 days).
         Preserves active applications so historical records are intact.
         """
         from datetime import datetime, timedelta

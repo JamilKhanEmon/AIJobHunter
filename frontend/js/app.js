@@ -1,12 +1,33 @@
 /**
- * JobHunter Pro - Enterprise Application Controller.
+ * AI Job Hunter - Enterprise Application Controller.
  */
+
+// Global Authenticated Fetch Wrapper (Seamless Bearer Token attachment)
+const _nativeFetch = window.fetch;
+window.fetch = function(url, options = {}) {
+  const token = localStorage.getItem("jobhunter_token");
+  if (token && typeof url === "string" && url.startsWith("/api/")) {
+    options = options || {};
+    options.headers = options.headers || {};
+    if (options.headers instanceof Headers) {
+      if (!options.headers.has("Authorization")) {
+        options.headers.set("Authorization", `Bearer ${token}`);
+      }
+    } else {
+      if (!options.headers["Authorization"]) {
+        options.headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+  }
+  return _nativeFetch(url, options);
+};
 
 // Application State
 const AppState = {
   jobs: [],
   stats: {},
   profile: null,
+  currentUser: null,
   selectedJobId: null,
   activeFilter: {
     query: "",
@@ -133,11 +154,182 @@ window.copyToClipboard = function(text, label, btnElem) {
   });
 };
 
+// Auth State & Controller
+async function checkAuthStatus() {
+  const token = localStorage.getItem("jobhunter_token");
+  const userBadge = document.getElementById("user-badge-name");
+  const btnLogout = document.getElementById("btn-user-logout");
+
+  if (!token) {
+    AppState.currentUser = null;
+    if (userBadge) userBadge.textContent = "Sign In / Register";
+    if (btnLogout) btnLogout.style.display = "none";
+    return null;
+  }
+
+  try {
+    const res = await fetch("/api/auth/me");
+    if (res.ok) {
+      const data = await res.json();
+      AppState.currentUser = data.user;
+      if (userBadge) {
+        userBadge.textContent = data.user.full_name || data.user.email.split("@")[0];
+      }
+      if (btnLogout) btnLogout.style.display = "inline-flex";
+      return data.user;
+    } else {
+      localStorage.removeItem("jobhunter_token");
+      AppState.currentUser = null;
+      if (userBadge) userBadge.textContent = "Sign In / Register";
+      if (btnLogout) btnLogout.style.display = "none";
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
+function setupAuthUI() {
+  const modalOverlay = document.getElementById("auth-modal-overlay");
+  const btnOpenModal = document.getElementById("btn-open-auth-modal");
+  const btnCloseModal = document.getElementById("btn-close-auth-modal");
+  const tabLogin = document.getElementById("tab-auth-login");
+  const tabRegister = document.getElementById("tab-auth-register");
+  const nameGroup = document.getElementById("auth-name-group");
+  const modalTitle = document.getElementById("auth-modal-title");
+  const btnSubmit = document.getElementById("btn-auth-submit");
+  const errorMsg = document.getElementById("auth-error-msg");
+  const btnLogout = document.getElementById("btn-user-logout");
+
+  let isRegisterMode = false;
+
+  function setMode(register) {
+    isRegisterMode = register;
+    if (errorMsg) errorMsg.style.display = "none";
+    if (register) {
+      if (tabRegister) {
+        tabRegister.style.background = "rgba(99, 102, 241, 0.25)";
+        tabRegister.style.color = "#fff";
+        tabRegister.style.border = "1px solid rgba(99, 102, 241, 0.5)";
+      }
+      if (tabLogin) {
+        tabLogin.style.background = "transparent";
+        tabLogin.style.color = "#94a3b8";
+        tabLogin.style.border = "none";
+      }
+      if (nameGroup) nameGroup.style.display = "block";
+      if (modalTitle) modalTitle.textContent = "Create an Account";
+      if (btnSubmit) btnSubmit.textContent = "Sign Up";
+    } else {
+      if (tabLogin) {
+        tabLogin.style.background = "rgba(99, 102, 241, 0.25)";
+        tabLogin.style.color = "#fff";
+        tabLogin.style.border = "1px solid rgba(99, 102, 241, 0.5)";
+      }
+      if (tabRegister) {
+        tabRegister.style.background = "transparent";
+        tabRegister.style.color = "#94a3b8";
+        tabRegister.style.border = "none";
+      }
+      if (nameGroup) nameGroup.style.display = "none";
+      if (modalTitle) modalTitle.textContent = "Sign In to AI Job Hunter";
+      if (btnSubmit) btnSubmit.textContent = "Sign In";
+    }
+  }
+
+  if (btnOpenModal) {
+    btnOpenModal.addEventListener("click", () => {
+      if (localStorage.getItem("jobhunter_token")) {
+        window.switchTab("tab-profile");
+      } else {
+        setMode(false);
+        if (modalOverlay) modalOverlay.style.display = "flex";
+      }
+    });
+  }
+
+  if (btnCloseModal && modalOverlay) {
+    btnCloseModal.addEventListener("click", () => {
+      modalOverlay.style.display = "none";
+    });
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) modalOverlay.style.display = "none";
+    });
+  }
+
+  if (tabLogin) tabLogin.addEventListener("click", () => setMode(false));
+  if (tabRegister) tabRegister.addEventListener("click", () => setMode(true));
+
+  if (btnSubmit) {
+    btnSubmit.addEventListener("click", async () => {
+      const email = document.getElementById("auth-email-input").value.trim();
+      const password = document.getElementById("auth-password-input").value.trim();
+      const name = document.getElementById("auth-name-input") ? document.getElementById("auth-name-input").value.trim() : "";
+
+      if (!email || !password) {
+        if (errorMsg) {
+          errorMsg.textContent = "Please fill in all required fields.";
+          errorMsg.style.display = "block";
+        }
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Processing...";
+
+      try {
+        const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
+        const body = { email, password };
+        if (isRegisterMode && name) body.full_name = name;
+
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (res.ok && data.access_token) {
+          localStorage.setItem("jobhunter_token", data.access_token);
+          if (modalOverlay) modalOverlay.style.display = "none";
+          await checkAuthStatus();
+          await refreshAllData();
+          appendTerminalLine("AUTH", `Signed in as ${email}`, "success");
+        } else {
+          if (errorMsg) {
+            errorMsg.textContent = data.detail || "Authentication failed. Please check credentials.";
+            errorMsg.style.display = "block";
+          }
+        }
+      } catch (err) {
+        if (errorMsg) {
+          errorMsg.textContent = err.message;
+          errorMsg.style.display = "block";
+        }
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = isRegisterMode ? "Sign Up" : "Sign In";
+      }
+    });
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+      localStorage.removeItem("jobhunter_token");
+      await checkAuthStatus();
+      await refreshAllData();
+      appendTerminalLine("AUTH", "You have signed out.", "info");
+    });
+  }
+}
+
 // Bootstrap
 document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupKeyboardShortcuts();
   setupWebSocket();
+  setupAuthUI();
+  checkAuthStatus();
   setupEventListeners();
   refreshAllData();
 });

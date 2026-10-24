@@ -29,10 +29,12 @@ class AutoPilotService:
 
     def execute_full_cycle(
         self,
-        max_posting_age_days: int = 7,
-        prune_age_days: int = 14,
+        max_posting_age_days: int = 5,
+        prune_age_days: int = 5,
         roles: Optional[Any] = None,
-        locations: Optional[Any] = None
+        locations: Optional[Any] = None,
+        profile: Optional[dict] = None,
+        user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Executes the complete end-to-end autonomous cycle:
@@ -99,7 +101,8 @@ class AutoPilotService:
                         company=job.company,
                         description=job.description or "",
                         location=job.location,
-                        remote=job.remote
+                        remote=job.remote,
+                        profile=profile
                     )
                     repo.save_evaluation(job.id, res)
                     score = res.get("score", 0)

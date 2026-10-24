@@ -3,10 +3,15 @@ Profile and Candidate Configuration Endpoints.
 """
 
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from typing import Optional
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
+from sqlalchemy.orm import Session
 import yaml
-from config.settings import settings, CONFIG_DIR
+from config.settings import settings, CONFIG_DIR, DATA_DIR
 from ai_engine.resume_parser import resume_parser
+from database.connection import get_db
+from database.models import User, UserProfile
+from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
@@ -14,11 +19,15 @@ PROFILE_FILE = CONFIG_DIR / "profile_resume.yaml"
 
 
 @router.post("/upload-resume")
-async def upload_resume_file(file: UploadFile = File(...)):
+async def upload_resume_file(
+    file: UploadFile = File(...),
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Upload a resume file (PDF, DOCX, TXT),
-    extracts the text, uses Groq LLM to parse into candidate schema,
-    saves the profile and updates candidate mobility & visual profile.
+    extracts the text, uses LLM to parse into candidate schema,
+    saves the profile to the authenticated user's profile record (or local yaml if guest).
     """
     from backend.websocket import manager
     try:
@@ -28,62 +37,73 @@ async def upload_resume_file(file: UploadFile = File(...)):
 
         manager.broadcast_sync({
             "type": "RESUME_UPLOAD_START",
-            "message": f"Parsing uploaded resume '{file.filename}' ({len(content)} bytes) with Groq AI..."
+            "message": f"Parsing uploaded resume '{file.filename}' ({len(content)} bytes) with AI..."
         })
 
-        parsed = resume_parser.parse_resume(file_bytes=content, filename=file.filename or "resume.pdf")
+        # If user is authenticated, do not overwrite default global file
+        should_persist_global = (user is None)
+        parsed = resume_parser.parse_resume(file_bytes=content, filename=file.filename or "resume.pdf", persist=should_persist_global)
 
+        if user:
+            # Save directly to user's profile in database
+            user_prof = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+            if not user_prof:
+                user_prof = UserProfile(user_id=user.id)
+                db.add(user_prof)
+
+            pers = parsed.get("personal_information", {})
+            user_prof.headline = pers.get("headline", "")
+            user_prof.phone = f"{pers.get('phone_country_code', '')}{pers.get('phone_number', '')}"
+            user_prof.city = pers.get("city", "")
+            user_prof.country = pers.get("country", "Bangladesh")
+            user_prof.github_url = pers.get("github_url", "")
+            user_prof.linkedin_url = pers.get("linkedin_url", "")
+            user_prof.portfolio_url = pers.get("portfolio_url", "")
+            user_prof.summary = parsed.get("summary", "")
+            user_prof.skills = parsed.get("skills", {})
+            user_prof.experience = parsed.get("experience", [])
+            user_prof.education = parsed.get("education", [])
+            user_prof.screening_answers = parsed.get("screening_answers", {})
+            user_prof.resume_filename = file.filename
+
+            # If full name was extracted, update user model
+            first = pers.get("first_name", "")
+            last = pers.get("last_name", "")
+            if first or last:
+                user.full_name = f"{first} {last}".strip()
+
+            db.commit()
+            db.refresh(user_prof)
+
+        first_name = parsed.get('personal_information', {}).get('first_name', user.full_name if user else 'Candidate')
         manager.broadcast_sync({
             "type": "RESUME_PARSED",
-            "message": f"Successfully parsed resume for {parsed.get('personal_information', {}).get('first_name', 'Candidate')}! Profile updated."
+            "message": f"Successfully parsed resume for {first_name}! Profile updated."
         })
 
         return {
             "success": True,
             "message": f"Resume '{file.filename}' parsed and profile generated successfully!",
             "profile": parsed,
-            "filename": file.filename
+            "filename": file.filename,
+            "is_authenticated": user is not None
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse resume: {str(e)}")
 
 
-@router.post("/reparse")
-def reparse_saved_resume():
-    """Re-parses the currently stored resume (data/resume.pdf) with the active LLM."""
-    dest = DATA_DIR / "resume.pdf"
-    if not dest.exists():
-        raise HTTPException(status_code=404, detail="No resume uploaded yet. Please upload a resume first.")
-
-    try:
-        with open(dest, "rb") as f:
-            content = f.read()
-
-        manager.broadcast_sync({
-            "type": "RESUME_UPLOAD_START",
-            "message": "Re-parsing stored resume with active LLM..."
-        })
-
-        parsed = resume_parser.parse_resume(file_bytes=content, filename="resume.pdf")
-
-        manager.broadcast_sync({
-            "type": "RESUME_PARSED",
-            "message": f"Successfully re-parsed resume for {parsed.get('personal_information', {}).get('first_name', 'Candidate')}!"
-        })
-
-        return {
-            "success": True,
-            "message": "Resume re-parsed successfully with AI!",
-            "profile": parsed
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to re-parse resume: {str(e)}")
-
-
 @router.get("")
-def get_profile():
+def get_profile(user: Optional[User] = Depends(get_current_user)):
+    """Returns candidate profile for the active authenticated user, or local default if guest."""
+    if user and user.profile:
+        profile_data = user.profile.to_candidate_schema()
+    else:
+        profile_data = settings.get_candidate_profile()
+
     return {
-        "profile": settings.get_candidate_profile(),
+        "profile": profile_data,
+        "is_authenticated": user is not None,
+        "user": user.to_dict() if user else None,
         "active_llm": {
             "provider": settings.active_llm_provider,
             "model": settings.active_llm_model,
@@ -93,11 +113,33 @@ def get_profile():
 
 
 @router.put("")
-def update_profile(new_profile: dict):
+def update_profile(
+    new_profile: dict,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     try:
+        if user:
+            user_prof = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+            if not user_prof:
+                user_prof = UserProfile(user_id=user.id)
+                db.add(user_prof)
+
+            pers = new_profile.get("personal_information", {})
+            user_prof.headline = pers.get("headline", user_prof.headline)
+            user_prof.phone = pers.get("phone_number", user_prof.phone)
+            user_prof.city = pers.get("city", user_prof.city)
+            user_prof.country = pers.get("country", user_prof.country)
+            user_prof.summary = new_profile.get("summary", user_prof.summary)
+            user_prof.skills = new_profile.get("skills", user_prof.skills)
+            user_prof.experience = new_profile.get("experience", user_prof.experience)
+            user_prof.education = new_profile.get("education", user_prof.education)
+            db.commit()
+            return {"success": True, "message": "User profile updated successfully in database"}
+
+        # Fallback to local file for single-user/guest
         with open(PROFILE_FILE, "w", encoding="utf-8") as f:
             yaml.safe_dump(new_profile, f, sort_keys=False, allow_unicode=True)
-        # Reload settings cache
         settings.profile_yaml = new_profile
         return {"success": True, "message": "Profile updated successfully"}
     except Exception as e:

@@ -24,25 +24,22 @@ from backend.routes.mcp import router as mcp_router
 from backend.services.autopilot import autopilot_service
 from backend.websocket import manager
 
+from backend.routes.auth import router as auth_router
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: ensure database tables exist
+    # Startup: ensure database tables exist (including User, UserProfile)
     logger.info("Initializing database tables...")
     init_db()
-    logger.info("Database initialized successfully.")
-    
-    # Launch autonomous daily background daemon (12-hour interval)
-    logger.info("Launching autonomous daily Auto-Pilot background daemon...")
-    scheduler_task = asyncio.create_task(autopilot_service.start_background_loop(interval_hours=12.0))
+    logger.info("Database initialized successfully. System configured in On-Demand search mode.")
     yield
     # Shutdown
-    logger.info("Shutting down Auto-Pilot daemon and application...")
+    logger.info("Shutting down AI Job Hunter application...")
     autopilot_service.stop()
-    scheduler_task.cancel()
 
 
 app = FastAPI(
@@ -62,6 +59,7 @@ app.add_middleware(
 )
 
 # Include API Routers
+app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(crawlers_router)
 app.include_router(eval_router)
