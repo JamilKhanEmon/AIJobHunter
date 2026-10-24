@@ -1865,7 +1865,7 @@ tr:hover .row-actions-group {
    CV-Centric Personal Matchmaker & Scoring Aesthetics
    =================================================================== */
 .cv-match-banner {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 1.15rem 1.45rem;
@@ -1874,9 +1874,10 @@ tr:hover .row-actions-group {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
+  transition: all 0.2s ease;
 }
 
 .cv-match-banner::before {
@@ -1886,7 +1887,7 @@ tr:hover .row-actions-group {
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #4f46e5 0%, #10b981 100%);
+  background: var(--accent-blue);
 }
 
 .cv-match-banner-left {
@@ -1900,14 +1901,14 @@ tr:hover .row-actions-group {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #1e40af 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
   font-weight: 800;
   color: #fff;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 14px var(--accent-glow);
   flex-shrink: 0;
 }
 
@@ -1927,33 +1928,13 @@ tr:hover .row-actions-group {
 .cv-candidate-name {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
-}
-
-.cv-badge-active {
-  font-size: 0.68rem;
-  padding: 0.15rem 0.45rem;
-  background: #ede9fe;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-.cv-verified-tag {
-  font-size: 0.68rem;
-  padding: 0.15rem 0.45rem;
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
-  border-radius: 4px;
-  font-weight: 700;
 }
 
 .cv-candidate-headline {
   font-size: 0.82rem;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .cv-meta-pills {
@@ -2099,34 +2080,22 @@ tr:hover .row-actions-group {
   box-shadow: inset 3px 0 0 var(--accent-indigo);
 }
 
-/* Banner CV Glow Enhancements */
-.cv-match-banner {
-  background: radial-gradient(120% 120% at 0% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(15, 20, 30, 0.95) 60%), #0f141e !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  position: relative;
-  overflow: hidden;
-}
-
-.cv-match-banner::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.6) 30%, rgba(16, 185, 129, 0.6) 70%, transparent 100%);
-  pointer-events: none;
-}
-
 .cv-dropzone-compact {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--accent-blue-subtle);
+  border: 1px dashed var(--accent-blue-border);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .cv-dropzone-compact:hover, .cv-dropzone-compact.dragover {
-  border-color: var(--accent-indigo) !important;
-  background: rgba(99, 102, 241, 0.12) !important;
-  box-shadow: 0 0 18px rgba(99, 102, 241, 0.3);
+  border-color: var(--accent-blue) !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+  box-shadow: 0 0 16px var(--accent-glow);
   transform: translateY(-2px);
 }
 

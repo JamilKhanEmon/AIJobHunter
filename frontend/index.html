@@ -160,24 +160,6 @@
         </div>
 
         <div class="header-right">
-          <!-- Quick API Key Status & Settings Launcher -->
-          <button class="btn btn-secondary btn-sm" id="btn-quick-api-key" onclick="switchTab('tab-settings')" title="Click to check or configure Inference API Keys (Groq, OpenAI, Gemini)" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.65rem; border: 1px solid rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.08); border-radius: var(--radius-sm);">
-            <span class="api-key-status-dot" id="header-api-key-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);"></span>
-            <span id="header-api-key-label" style="font-size: 0.76rem; font-weight: 600; color: #e2e8f0;">AI Key: Active</span>
-          </button>
-
-          <!-- On-Demand Search Beacon -->
-          <div class="autopilot-status-badge" id="header-autopilot-beacon" title="On-Demand Search Engine: Only searches live when you click">
-            <span class="autopilot-pulse-dot" style="background: #34d399;"></span>
-            <span id="header-beacon-text">On-Demand Mode (&le;5d)</span>
-          </div>
-
-          <!-- MASTER ON-DEMAND SEARCH BUTTON -->
-          <button class="btn btn-primary btn-sm" id="btn-master-autopilot" title="1-Click On-Demand Search: Clean Expired + Auto-Discover Fresh (<=5d) + AI ATS Score" style="background: linear-gradient(135deg, #6366f1 0%, #10b981 100%); border: none; box-shadow: 0 0 16px rgba(99, 102, 241, 0.45); font-weight: 700;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 14px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>Search Jobs Now</span>
-          </button>
-
           <!-- User Authentication Section -->
           <div id="header-user-section" style="display: flex; align-items: center; gap: 0.45rem;">
             <button class="btn btn-secondary btn-sm" id="btn-open-auth-modal" style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); color: var(--accent-blue); font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.65rem;">
@@ -195,19 +177,10 @@
             <span id="theme-toggle-text">Dark</span>
           </button>
 
-          <button class="btn btn-secondary btn-sm" id="btn-sync-all" title="Refresh Live Data">
+          <!-- Refresh Live Data -->
+          <button class="btn btn-secondary btn-sm" id="btn-sync-all" title="Refresh Live Job Data">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-            <span>Sync</span>
-          </button>
-
-          <button class="btn btn-secondary btn-sm" id="btn-batch-eval" title="Score Unscored Listings with Groq AI">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-            <span>Batch Eval</span>
-          </button>
-
-          <button class="btn btn-outline-danger btn-sm" id="btn-purge-dummy" title="Wipe out all dummy/test data and reset database to clean slate">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 13px; height: 13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span>Purge Data</span>
+            <span>Refresh</span>
           </button>
         </div>
       </header>
@@ -273,7 +246,7 @@
               <div class="metric-data">
                 <h4>Evaluated Fit</h4>
                 <div class="metric-number" id="kpi-evaluated">0</div>
-                <div class="metric-sub" id="kpi-eval-sub">0 unscored remaining</div>
+                <div class="metric-sub" id="kpi-eval-sub">Evaluated with AI</div>
               </div>
               <div class="metric-icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -284,7 +257,7 @@
               <div class="metric-data">
                 <h4>Target Matches (≥80%)</h4>
                 <div class="metric-number" id="kpi-high-matches">0</div>
-                <div class="metric-sub">High qualification alignment</div>
+                <div class="metric-sub">High skill alignment</div>
               </div>
               <div class="metric-icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
@@ -295,7 +268,7 @@
               <div class="metric-data">
                 <h4>Submissions</h4>
                 <div class="metric-number" id="kpi-applied">0</div>
-                <div class="metric-sub">Completed application flows</div>
+                <div class="metric-sub">Saved &amp; tracked</div>
               </div>
               <div class="metric-icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -303,154 +276,56 @@
             </div>
           </section>
 
-          <!-- Featured Jobs Headline & Mission Control Toggle -->
+          <!-- Featured Jobs Headline -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
             <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
               <span>Featured Vacancies</span>
               <span class="badge" id="featured-jobs-count" style="background: var(--accent-blue-subtle); color: var(--accent-blue); border: 1px solid var(--accent-blue-border); font-size: 0.74rem; font-weight: 700;">Live Feed</span>
             </h2>
-            <button class="btn btn-secondary btn-sm" id="btn-toggle-mission-control" onclick="toggleMissionControlCollapse()" style="font-weight: 600; font-size: 0.76rem;">
-              ⚙️ Search &amp; Auto-Pilot Settings
-            </button>
           </div>
 
-          <!-- ==============================================================
-               AUTONOMOUS MISSION CONTROL & PREFERENCES HUB (USER CONTROL CENTER)
-               ============================================================== -->
+          <!-- Preferences & Search Engine Configuration (Hidden Background State) -->
           <section class="mission-control-panel" id="mission-control-panel" style="display: none;">
-            <div class="mission-control-header">
-              <div class="mission-title-group">
-                <h3>
-                  <span>🎯 Autonomous Job Radar Control</span>
-                  <span class="mission-bn-tag">Search Preferences &amp; Execution Hub</span>
-                </h3>
-                <p class="mission-subtitle">
-                  Configure your target job roles and locations below. Trigger <strong>Instant Run</strong> to discover and evaluate live jobs immediately, or let the autonomous <strong>Daily Auto-Pilot</strong> run scheduled scans every morning.
-                </p>
-              </div>
-              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                <button id="radar-user-auth-pill" onclick="document.getElementById('btn-open-auth-modal').click()" class="badge" style="background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.45); cursor: pointer; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;" title="Click to Sign In or Create Multi-User Account">
-                  <span id="radar-auth-label">👤 Guest Mode (Click to Sign In / Multi-User)</span>
-                </button>
-                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
-                  ● Zero Dummy Data
-                </span>
-                <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3);">
-                  ⚡ Groq LPU (~16ms)
-                </span>
-              </div>
-            </div>
-
-            <!-- Form Inputs: Roles, Locations, Freshness, Mobility -->
             <div class="mission-inputs-grid">
-              <!-- Input 1: Roles -->
               <div class="mission-input-card">
-                <label for="mission-input-roles">
-                  <span>💼 Target Roles (Job Titles)</span>
-                </label>
-                <input type="text" id="mission-input-roles" class="mission-input-field" placeholder="e.g. Doctor, Civil Engineer, Accountant, Software Engineer, Nurse, UI/UX" value="Software Engineer, AI Engineer, Full Stack, Data Analyst">
-                <span class="input-hint">Any profession or role (Doctor, Engineer, Accountant, Designer, etc.)</span>
+                <label for="mission-input-roles">Target Roles</label>
+                <input type="text" id="mission-input-roles" class="mission-input-field" value="Software Engineer, AI Engineer, Full Stack, Data Analyst">
               </div>
-
-              <!-- Input 2: Locations -->
               <div class="mission-input-card">
-                <label for="mission-input-locations">
-                  <span>📍 Target Locations &amp; Regions</span>
-                </label>
-                <input type="text" id="mission-input-locations" class="mission-input-field" placeholder="e.g. Bangladesh, Dhaka, Remote, Worldwide" value="Bangladesh, Dhaka, Remote, Worldwide">
-                <span class="input-hint">Target locations (e.g. Bangladesh on-site or Remote worldwide)</span>
+                <label for="mission-input-locations">Target Locations</label>
+                <input type="text" id="mission-input-locations" class="mission-input-field" value="Bangladesh, Dhaka, Remote, Worldwide">
               </div>
-
-              <!-- Input 3: Freshness Filter -->
               <div class="mission-input-card">
-                <label for="mission-select-freshness">
-                  <span>⏳ Freshness Window</span>
-                </label>
-                <select id="mission-select-freshness" class="mission-input-field" style="cursor: pointer;">
-                  <option value="7" selected>&le; 7 Days (Fresh Postings - Recommended)</option>
-                  <option value="3">&le; 3 Days (Ultra Fresh Only)</option>
-                  <option value="1">&le; 24 Hours (Today Only)</option>
+                <label for="mission-select-freshness">Freshness Window</label>
+                <select id="mission-select-freshness" class="mission-input-field">
+                  <option value="7" selected>&le; 7 Days</option>
+                  <option value="3">&le; 3 Days</option>
+                  <option value="1">&le; 24 Hours</option>
                   <option value="14">&le; 14 Days</option>
                 </select>
-                <span class="input-hint">Expired or dead listings are automatically filtered out</span>
               </div>
-
-              <!-- Input 4: Mobility & Visa Policy -->
               <div class="mission-input-card">
-                <label>
-                  <span>✈️ Workplace &amp; Visa Policy</span>
-                </label>
+                <label>Workplace Policy</label>
                 <div class="mission-mobility-pills">
                   <label class="mobility-checkbox-label">
                     <input type="checkbox" id="mission-chk-remote" checked>
-                    <span>🌐 Remote Worldwide</span>
+                    <span>Remote Worldwide</span>
                   </label>
                   <label class="mobility-checkbox-label">
                     <input type="checkbox" id="mission-chk-bd" checked>
-                    <span>🇧🇩 Bangladesh On-Site / Hybrid</span>
+                    <span>Bangladesh On-Site</span>
                   </label>
                   <label class="mobility-checkbox-label">
                     <input type="checkbox" id="mission-chk-visa" checked>
-                    <span>✈️ Foreign with Visa Sponsorship</span>
+                    <span>Visa Sponsorship</span>
                   </label>
                 </div>
-                <span class="input-hint">Foreign roles without visa support trigger auto-SKIP</span>
               </div>
             </div>
-
-            <!-- Action Bar: Save + 2 Modes (Instant & Daily) -->
-            <div class="mission-actions-bar">
-              <div class="actions-left-group">
-                <button class="btn btn-secondary btn-sm" id="btn-mission-save-pref">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 13px; height: 13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  <span>Save Preferences</span>
-                </button>
-                <span id="mission-save-feedback" style="font-size: 0.74rem; color: #34d399; font-weight: 600; display: none;">✓ Saved</span>
-              </div>
-
-              <div class="actions-right-group">
-                <!-- Mode 1: Instant Run Now -->
-                <button class="btn-instant-master" id="btn-mission-instant-run" title="Immediately crawls live web feeds and computes Groq AI fit scores">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 16px; height: 16px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span>⚡ Instant Run Now</span>
-                </button>
-
-                <!-- Mode 2: Daily Auto-Pilot Beacon -->
-                <div class="daily-daemon-card" title="Autonomous background scheduler runs every 12 hours">
-                  <span class="autopilot-pulse-dot" style="width: 10px; height: 10px;"></span>
-                  <div class="daemon-text">
-                    <span class="daemon-title">⏰ Daily Auto-Pilot: ACTIVE</span>
-                    <span class="daemon-sub">Runs scheduled autonomous cycles in background (12h)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Visual 3-Step Guide Strip -->
-            <div class="mission-guide-strip">
-              <div class="guide-step-card">
-                <div class="guide-step-badge">1</div>
-                <div class="guide-step-content">
-                  <strong>Set Search Preferences:</strong>
-                  Enter your priority roles and locations in the fields above, then click <em>"Save Preferences"</em>.
-                </div>
-              </div>
-
-              <div class="guide-step-card">
-                <div class="guide-step-badge">2</div>
-                <div class="guide-step-content">
-                  <strong>Instant Search Run:</strong>
-                  Click <em>"⚡ Instant Run Now"</em> to query live worldwide feeds and compute ATS fit scores immediately.
-                </div>
-              </div>
-
-              <div class="guide-step-card">
-                <div class="guide-step-badge">3</div>
-                <div class="guide-step-content">
-                  <strong>Daily Autonomous Auto-Pilot:</strong>
-                  Zero manual intervention required. The background daemon runs every morning, keeping fresh jobs and purging expired ones.
-                </div>
-              </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button class="btn btn-secondary btn-sm" id="btn-mission-save-pref">Save Preferences</button>
+              <button class="btn-instant-master" id="btn-mission-instant-run">Run Now</button>
+              <span id="mission-save-feedback" style="font-size: 0.74rem; color: #34d399; font-weight: 600; display: none;">✓ Saved</span>
             </div>
           </section>
 
@@ -465,21 +340,10 @@
               <div class="cv-profile-meta">
                 <div class="cv-profile-header-row">
                   <h3 class="cv-candidate-name" id="banner-candidate-name">Candidate Workspace</h3>
-                  <span class="cv-badge-active">Personalized Feed</span>
-                  <span class="cv-verified-tag">✓ CV Match Engine</span>
-                  <span class="badge" id="banner-high-match-count" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.7rem; font-weight: 700;">🌟 Live Match Active</span>
-                  <span class="badge" id="banner-avg-fit" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;">Avg: --%</span>
+                  <span class="badge" id="banner-high-match-count" style="background: var(--accent-blue-subtle); color: var(--accent-blue); border: 1px solid var(--accent-blue-border); font-size: 0.72rem; font-weight: 700;">🌟 Matches Active</span>
                 </div>
                 <div class="cv-candidate-headline" id="banner-candidate-headline">
-                  Upload your CV (PDF / DOCX) to automatically rank all vacancies for your skills
-                </div>
-                <div class="cv-meta-pills" id="banner-candidate-skills-preview">
-                  <span class="cv-pill">Python</span>
-                  <span class="cv-pill">JavaScript</span>
-                  <span class="cv-pill">React</span>
-                  <span class="cv-pill">FastAPI</span>
-                  <span class="cv-pill">Docker</span>
-                  <span class="cv-pill">SQL</span>
+                  Upload your CV to automatically score and rank all jobs for your skills
                 </div>
               </div>
             </div>
@@ -491,8 +355,8 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
                 <div>
-                  <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Upload Your CV / Resume</div>
-                  <div style="font-size: 0.72rem; color: var(--text-muted);" id="banner-cv-status-text">Drop PDF/DOCX to re-rank all jobs for your CV</div>
+                  <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">Upload Your CV / Resume</div>
+                  <div style="font-size: 0.72rem; color: var(--text-secondary);" id="banner-cv-status-text">Drop PDF/DOCX to re-rank all jobs for your CV</div>
                 </div>
               </div>
               <button class="btn btn-secondary btn-sm" id="btn-re-rank-cv" title="Re-match all jobs against current candidate profile">

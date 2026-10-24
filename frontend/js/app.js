@@ -1829,16 +1829,18 @@ function setupEventListeners() {
     });
   }
 
-  UI.btnBatchEval.addEventListener("click", async () => {
-    appendTerminalLine("EVAL", "Launching batch evaluation on unscored listings...", "info");
-    try {
-      const res = await fetch("/api/evaluate/all-pending/run", { method: "POST" });
-      const data = await res.json();
-      appendTerminalLine("EVAL", data.message, "success");
-    } catch (err) {
-      appendTerminalLine("EVAL", `Error: ${err}`, "error");
-    }
-  });
+  if (UI.btnBatchEval) {
+    UI.btnBatchEval.addEventListener("click", async () => {
+      appendTerminalLine("EVAL", "Launching batch evaluation on unscored listings...", "info");
+      try {
+        const res = await fetch("/api/evaluate/all-pending/run", { method: "POST" });
+        const data = await res.json();
+        appendTerminalLine("EVAL", data.message, "success");
+      } catch (err) {
+        appendTerminalLine("EVAL", `Error: ${err}`, "error");
+      }
+    });
+  }
 
   UI.btnClearTerminal.addEventListener("click", () => {
     UI.terminalOutput.innerHTML = "";
