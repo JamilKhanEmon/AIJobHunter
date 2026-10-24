@@ -725,7 +725,7 @@ const PROVIDERS_CATALOG = {
   },
   gemini: {
     name: "Google Gemini",
-    badge: "Next-Gen Flash & Multimodal",
+    badge: "Fast Flash & Multimodal",
     badgeColor: "#38bdf8",
     keyLabel: "Google Gemini API Key",
     portalText: "Get Gemini Key ↗",
@@ -1235,7 +1235,7 @@ window.toggleMissionControlCollapse = function() {
   }
 };
 
-// Render Job Portal Cards View (NextJobz / Modern Clean Portal Layout)
+// Render Job Portal Cards View (Clean High-Contrast Cards Layout)
 function renderJobCards(jobs) {
   const container = document.getElementById("cards-view-panel");
   if (!container) return;
