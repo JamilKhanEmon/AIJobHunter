@@ -431,6 +431,7 @@
                 <option value="ashby">Ashby</option>
                 <option value="workday">Workday</option>
                 <option value="linkedin">LinkedIn</option>
+                <option value="bdjobs">Bdjobs (Bangladesh)</option>
               </select>
             </div>
           </div>
@@ -673,7 +674,7 @@
                 </div>
                 <h3 style="font-size: 1.15rem; font-weight: 700;">Autonomous Multi-Channel Web Job Discovery</h3>
                 <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.45;">
-                  Autonomously queries public networks, LinkedIn guest feeds, Arbeitnow (Visa Sponsorship), and global remote feeds. Discovers postings matching your target roles across Bangladesh (Dhaka) and worldwide remote.
+                  Autonomously queries Bdjobs (Bangladesh local), LinkedIn guest feeds, Arbeitnow (Visa Sponsorship), and global remote feeds. Discovers postings matching your target roles across Bangladesh (Dhaka) and worldwide remote.
                 </p>
               </div>
               <div style="display: flex; gap: 0.6rem; align-items: center;">
@@ -770,6 +771,26 @@
               <div style="display: flex; gap: 0.5rem; margin-top: auto;">
                 <input type="text" id="input-custom-linkedin" class="select-clean" placeholder="Keywords (e.g. React Lead)" style="flex: 1;">
                 <button class="btn btn-secondary btn-sm" onclick="executeCustom('linkedin', 'input-custom-linkedin')">Search</button>
+              </div>
+            </div>
+
+            <!-- Bdjobs.com (Bangladesh) -->
+            <div class="ats-card">
+              <div class="ats-card-header">
+                <div class="ats-brand">
+                  <span class="badge badge-bdjobs">Bdjobs (Bangladesh)</span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">Local BD Gateway</span>
+              </div>
+              <div class="ats-targets-row">
+                <button class="chip-btn" onclick="executeCrawl('bdjobs', 'Software Engineer')">Software Eng</button>
+                <button class="chip-btn" onclick="executeCrawl('bdjobs', 'Python Developer')">Python</button>
+                <button class="chip-btn" onclick="executeCrawl('bdjobs', 'Full Stack')">Full Stack</button>
+                <button class="chip-btn" onclick="executeCrawl('bdjobs', 'AI Engineer')">AI</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <input type="text" id="input-custom-bdjobs" class="select-clean" placeholder="Keywords (e.g. DevOps, React)" style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" onclick="executeCustom('bdjobs', 'input-custom-bdjobs')">Search</button>
               </div>
             </div>
           </div>

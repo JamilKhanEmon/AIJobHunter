@@ -10,11 +10,13 @@ from config.logger import logger
 from config.settings import settings
 from scrapers.base_scraper import ScrapedJob
 from scrapers.linkedin_scraper import LinkedInScraper
+from scrapers.bdjobs_scraper import BdjobsScraper
 
 
 class AutonomousDiscoveryEngine:
     def __init__(self):
         self.linkedin_scraper = LinkedInScraper()
+        self.bdjobs_scraper = BdjobsScraper()
 
     def discover(self, roles: Optional[List[str]] = None, locations: Optional[List[str]] = None, limit_per_source: int = 15) -> List[ScrapedJob]:
         """
@@ -93,7 +95,26 @@ class AutonomousDiscoveryEngine:
                 except Exception as e:
                     logger.warning(f"Error discovering LinkedIn jobs for {role} in {loc}: {e}")
 
-        # 2-5: Only query global remote job boards if the user allows Remote / Worldwide
+        # Determine if Bangladesh / Local job boards (Bdjobs) should be included
+        allow_bd = any(
+            any(w in l.lower() for w in ["bangladesh", "bd", "dhaka", "chittagong", "sylhet", "local"])
+            for l in target_locations
+        ) or "bangladesh" in user_country.lower()
+
+        # 2. Local Bangladesh Discovery via Bdjobs.com (Official Gateway API)
+        if allow_bd:
+            for role in target_roles[:3]:
+                try:
+                    logger.info(f"Auto-discovering local Bangladesh jobs for '{role}' on Bdjobs.com...")
+                    bd_jobs = self.bdjobs_scraper.fetch_jobs(keywords=role, limit=limit_per_source)
+                    for j in bd_jobs:
+                        if j.url and j.url not in seen_urls:
+                            seen_urls.add(j.url)
+                            discovered_jobs.append(j)
+                except Exception as e:
+                    logger.warning(f"Error discovering Bdjobs jobs for '{role}': {e}")
+
+        # 3-6: Only query global remote job boards if the user allows Remote / Worldwide
         if allow_remote:
             # 2. Arbeitnow Discovery (Worldwide Remote & Visa Sponsorship roles)
             try:

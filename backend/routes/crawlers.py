@@ -14,6 +14,7 @@ from scrapers.lever_crawler import LeverCrawler
 from scrapers.ashby_crawler import AshbyCrawler
 from scrapers.workday_crawler import WorkdayCrawler
 from scrapers.linkedin_scraper import LinkedInScraper
+from scrapers.bdjobs_scraper import BdjobsScraper
 from config.settings import settings
 from backend.websocket import manager
 
@@ -61,6 +62,9 @@ def run_crawler_task(source: str, target: str, location: str):
         elif source_lower == "linkedin":
             crawler = LinkedInScraper()
             scraped_jobs = crawler.fetch_jobs(keywords=target, location=location)
+        elif source_lower == "bdjobs":
+            crawler = BdjobsScraper()
+            scraped_jobs = crawler.fetch_jobs(keywords=target)
 
         saved_count = 0
         for s_job in scraped_jobs:
@@ -85,7 +89,7 @@ def run_autonomous_discovery_task(roles: Optional[List[str]], locations: Optiona
     repo = JobRepository(db)
     manager.broadcast_sync({
         "type": "AUTO_DISCOVERY_STARTED",
-        "message": "Autonomous Web Discovery initiated: Scanning LinkedIn, global remote boards & visa feeds..."
+        "message": "Autonomous Web Discovery initiated: Scanning Bdjobs (Bangladesh), LinkedIn, global remote boards & visa feeds..."
     })
 
     try:
