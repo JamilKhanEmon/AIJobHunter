@@ -386,8 +386,39 @@ function setupAuthUI() {
   }
 }
 
+// Theme Toggle Engine (White & Blue Light/Dark Mode)
+window.initTheme = function() {
+  const saved = localStorage.getItem("ai_job_hunter_theme") || "light";
+  document.documentElement.setAttribute("data-theme", saved);
+  updateThemeButtonUI(saved);
+};
+
+window.toggleTheme = function() {
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("ai_job_hunter_theme", next);
+  updateThemeButtonUI(next);
+};
+
+function updateThemeButtonUI(theme) {
+  const icon = document.getElementById("theme-toggle-icon");
+  const text = document.getElementById("theme-toggle-text");
+  if (theme === "dark") {
+    if (icon) icon.textContent = "☀️";
+    if (text) text.textContent = "Light";
+  } else {
+    if (icon) icon.textContent = "🌙";
+    if (text) text.textContent = "Dark";
+  }
+}
+
+// Immediate theme bootstrap
+window.initTheme();
+
 // Bootstrap Application
 document.addEventListener("DOMContentLoaded", () => {
+  window.initTheme();
   setupNavigation();
   setupKeyboardShortcuts();
   setupWebSocket();
