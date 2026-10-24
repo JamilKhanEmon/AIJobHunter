@@ -159,10 +159,12 @@ async function checkAuthStatus() {
   const token = localStorage.getItem("jobhunter_token");
   const userBadge = document.getElementById("user-badge-name");
   const btnLogout = document.getElementById("btn-user-logout");
+  const radarAuthLabel = document.getElementById("radar-auth-label");
 
   if (!token) {
     AppState.currentUser = null;
     if (userBadge) userBadge.textContent = "Sign In / Register";
+    if (radarAuthLabel) radarAuthLabel.textContent = "👤 Guest Mode (Click to Sign In / Multi-User)";
     if (btnLogout) btnLogout.style.display = "none";
     return null;
   }
@@ -172,15 +174,16 @@ async function checkAuthStatus() {
     if (res.ok) {
       const data = await res.json();
       AppState.currentUser = data.user;
-      if (userBadge) {
-        userBadge.textContent = data.user.full_name || data.user.email.split("@")[0];
-      }
+      const displayName = data.user.full_name || data.user.email.split("@")[0];
+      if (userBadge) userBadge.textContent = displayName;
+      if (radarAuthLabel) radarAuthLabel.textContent = `✓ Active User: ${displayName} (Isolated CV & Keys)`;
       if (btnLogout) btnLogout.style.display = "inline-flex";
       return data.user;
     } else {
       localStorage.removeItem("jobhunter_token");
       AppState.currentUser = null;
       if (userBadge) userBadge.textContent = "Sign In / Register";
+      if (radarAuthLabel) radarAuthLabel.textContent = "👤 Guest Mode (Click to Sign In / Multi-User)";
       if (btnLogout) btnLogout.style.display = "none";
       return null;
     }
@@ -1397,55 +1400,90 @@ function setupEventListeners() {
   }
 
   // Mission Control: ⚡ Instant Run Now
-  const btnMissionInstant = document.getElementById("btn-mission-instant-run");
-  if (btnMissionInstant) {
-    btnMissionInstant.addEventListener("click", async () => {
-      const rolesRaw = (document.getElementById("mission-input-roles")?.value || "").split(",").map(r => r.trim()).filter(Boolean);
-      const locsRaw = (document.getElementById("mission-input-locations")?.value || "").split(",").map(l => l.trim()).filter(Boolean);
-      const freshness = parseInt(document.getElementById("mission-select-freshness")?.value || "7", 10);
+  // Mission Control: ⚡ Instant Run Now & Master Search
+  async function triggerOnDemandSearch(btnElement, triggerSource) {
+    const rolesRaw = (document.getElementById("mission-input-roles")?.value || "").split(",").map(r => r.trim()).filter(Boolean);
+    let locsRaw = (document.getElementById("mission-input-locations")?.value || "").split(",").map(l => l.trim()).filter(Boolean);
+    const freshness = parseInt(document.getElementById("mission-select-freshness")?.value || "5", 10);
+    const chkRemote = document.getElementById("mission-chk-remote");
+    const chkBd = document.getElementById("mission-chk-bd");
+    const chkVisa = document.getElementById("mission-chk-visa");
 
-      appendTerminalLine("INSTANT", `⚡ Launching Instant Run: Crawling live web feeds for [${rolesRaw.join(", ")}] in [${locsRaw.join(", ")}] (<= ${freshness} days)...`, "info");
-      btnMissionInstant.disabled = true;
-      const originalHtml = btnMissionInstant.innerHTML;
-      btnMissionInstant.innerHTML = `<span>⏳ Searching Live Worldwide Feeds...</span>`;
+    const acceptRemote = chkRemote ? chkRemote.checked : true;
+    const acceptHome = chkBd ? chkBd.checked : true;
+    const acceptVisa = chkVisa ? chkVisa.checked : true;
 
-      try {
-        const res = await fetch("/api/pipeline/instant-run", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            roles: rolesRaw.length ? rolesRaw : undefined,
-            locations: locsRaw.length ? locsRaw : undefined,
-            max_age_days: freshness
-          })
-        });
-        const data = await res.json();
-        appendTerminalLine("INSTANT", data.message, "success");
-        setTimeout(async () => {
-          await refreshAllData(false);
-          btnMissionInstant.disabled = false;
-          btnMissionInstant.innerHTML = originalHtml;
-        }, 3500);
-      } catch (err) {
-        appendTerminalLine("INSTANT", `Instant run failed: ${err.message}`, "error");
-        btnMissionInstant.disabled = false;
-        btnMissionInstant.innerHTML = originalHtml;
+    // If user explicitly unchecks Remote Worldwide or enters only BD, filter out remote worldwide terms
+    if (!acceptRemote) {
+      locsRaw = locsRaw.filter(l => !["remote", "worldwide", "global", "any"].includes(l.toLowerCase()));
+      if (!locsRaw.length) locsRaw = ["Bangladesh"];
+    }
+
+    const mobility = {
+      accept_remote_worldwide: acceptRemote,
+      accept_home_country_onsite: acceptHome,
+      accept_foreign_onsite_with_visa: acceptVisa,
+      reject_foreign_onsite_without_visa: true
+    };
+
+    // Auto-persist search preferences so they never reset on page refresh
+    try {
+      await fetch("/api/profile/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          positions: rolesRaw,
+          locations: locsRaw,
+          max_age_days: freshness,
+          mobility: mobility
+        })
+      });
+    } catch (_) {}
+
+    appendTerminalLine(triggerSource, `⚡ Launching On-Demand Search: Searching live feeds for [${rolesRaw.join(", ") || "All Target Roles"}] in [${locsRaw.join(", ")}] (Freshness: <= ${freshness}d, Remote: ${acceptRemote ? "Yes" : "No"})...`, "info");
+
+    const originalHtml = btnElement ? btnElement.innerHTML : "";
+    if (btnElement) {
+      btnElement.disabled = true;
+      btnElement.innerHTML = `<span>⏳ Searching Live Web Feeds...</span>`;
+    }
+
+    try {
+      const res = await fetch("/api/pipeline/instant-run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roles: rolesRaw.length ? rolesRaw : undefined,
+          locations: locsRaw.length ? locsRaw : undefined,
+          max_age_days: freshness
+        })
+      });
+      const data = await res.json();
+      appendTerminalLine(triggerSource, data.message || "Search pipeline executed.", "success");
+      setTimeout(async () => {
+        await refreshAllData(false);
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.innerHTML = originalHtml;
+        }
+      }, 3500);
+    } catch (err) {
+      appendTerminalLine(triggerSource, `Search failed: ${err.message}`, "error");
+      if (btnElement) {
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalHtml;
       }
-    });
+    }
   }
 
-  // 1-Click Master Auto-Pilot Pipeline
+  const btnMissionInstant = document.getElementById("btn-mission-instant-run");
+  if (btnMissionInstant) {
+    btnMissionInstant.addEventListener("click", () => triggerOnDemandSearch(btnMissionInstant, "INSTANT"));
+  }
+
+  // 1-Click Master Auto-Pilot Pipeline (Top Navbar Button)
   if (UI.btnMasterAutopilot) {
-    UI.btnMasterAutopilot.addEventListener("click", async () => {
-      appendTerminalLine("AUTOPILOT", "Master Auto-Pilot Pipeline triggered: Pruning expired leads, discovering fresh postings (<=7 days), and evaluating with Groq AI...", "info");
-      try {
-        const res = await fetch("/api/pipeline/autopilot", { method: "POST" });
-        const data = await res.json();
-        appendTerminalLine("AUTOPILOT", data.message, "success");
-      } catch (err) {
-        appendTerminalLine("AUTOPILOT", `Pipeline trigger error: ${err.message}`, "error");
-      }
-    });
+    UI.btnMasterAutopilot.addEventListener("click", () => triggerOnDemandSearch(UI.btnMasterAutopilot, "NAVBAR_SEARCH"));
   }
 
   // 1-Click Purge All Dummy & Stale Data

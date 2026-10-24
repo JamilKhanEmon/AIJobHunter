@@ -65,11 +65,13 @@
         <button class="nav-item" data-tab="tab-profile" id="nav-btn-profile" onclick="switchTab('tab-profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Candidate Profile</span>
+          <span class="nav-counter" style="color: #60a5fa; font-size: 0.68rem; font-weight: 600;">My CV</span>
         </button>
 
         <button class="nav-item" data-tab="tab-settings" id="nav-btn-settings" onclick="switchTab('tab-settings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>LLM Engine Config</span>
+          <span class="nav-counter" style="color: #a78bfa; font-size: 0.68rem; font-weight: 600;">API Keys</span>
         </button>
       </nav>
 
@@ -218,7 +220,10 @@
                   Configure your target job roles and locations below. Trigger <strong>Instant Run</strong> to discover and evaluate live jobs immediately, or let the autonomous <strong>Daily Auto-Pilot</strong> run scheduled scans every morning.
                 </p>
               </div>
-              <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <button id="radar-user-auth-pill" onclick="document.getElementById('btn-open-auth-modal').click()" class="badge" style="background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.45); cursor: pointer; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.2s;" title="Click to Sign In or Create Multi-User Account">
+                  <span id="radar-auth-label">👤 Guest Mode (Click to Sign In / Multi-User)</span>
+                </button>
                 <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
                   ● Zero Dummy Data
                 </span>

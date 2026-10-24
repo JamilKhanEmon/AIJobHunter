@@ -52,6 +52,8 @@ class UserProfile(Base):
     education = Column(JSON, nullable=True)
     screening_answers = Column(JSON, nullable=True)
     resume_filename = Column(String(255), nullable=True)
+    search_preferences = Column(JSON, nullable=True)
+    api_keys = Column(JSON, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="profile")
@@ -79,7 +81,9 @@ class UserProfile(Base):
             "skills": self.skills or {},
             "experience": self.experience or [],
             "education": self.education or [],
-            "screening_answers": self.screening_answers or {}
+            "screening_answers": self.screening_answers or {},
+            "api_keys": self.api_keys or {},
+            "search_preferences": self.search_preferences or {}
         }
 
 

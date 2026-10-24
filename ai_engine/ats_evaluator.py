@@ -24,7 +24,43 @@ class ATSEvaluator:
         logger.info(f"Evaluating job '{title}' at '{company}'...")
 
         active_profile = profile or self.profile
-        profile_str = yaml.dump(active_profile, default_flow_style=False)
+
+        # Build a token-efficient compact profile representation to prevent TPM rate limits
+        compact_parts = []
+        p_info = active_profile.get("personal_information", {})
+        compact_parts.append(f"Role: {p_info.get('headline', 'Software Professional')}")
+        compact_parts.append(f"Location: {p_info.get('city', '')}, {p_info.get('country', settings.home_country)}")
+        
+        summary = active_profile.get("summary", "")
+        if summary:
+            compact_parts.append(f"Summary: {summary[:300]}")
+            
+        skills = active_profile.get("skills", {})
+        if isinstance(skills, dict):
+            flat_skills = []
+            for cat, items in skills.items():
+                if isinstance(items, list):
+                    flat_skills.extend(items[:8])
+            compact_parts.append(f"Core Skills: {', '.join(flat_skills[:25])}")
+        elif isinstance(skills, list):
+            compact_parts.append(f"Core Skills: {', '.join(skills[:25])}")
+
+        exp = active_profile.get("experience", [])
+        if isinstance(exp, list) and exp:
+            exp_strs = []
+            for item in exp[:2]:
+                if isinstance(item, dict):
+                    role_t = item.get("title", "")
+                    comp = item.get("company", "")
+                    exp_strs.append(f"{role_t} at {comp}")
+            if exp_strs:
+                compact_parts.append(f"Recent Experience: {'; '.join(exp_strs)}")
+
+        profile_str = "\n".join(compact_parts)
+
+        # Cap job description to 1500 chars of core responsibilities & requirements
+        clean_desc = (description or "").strip()[:1500]
+
         system_prompt = JOB_EVALUATION_SYSTEM_PROMPT.replace(
             "{home_country}", settings.home_country
         )
@@ -36,7 +72,7 @@ class ATSEvaluator:
             title=title,
             location=location,
             remote="Yes" if remote else "No",
-            job_description=description[:4000] # Cap context window safely
+            job_description=clean_desc
         )
 
         evaluation_result = self.router.generate_json(

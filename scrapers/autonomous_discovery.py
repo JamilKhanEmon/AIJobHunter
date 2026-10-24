@@ -77,11 +77,14 @@ class AutonomousDiscoveryEngine:
 
         logger.info(f"Starting Multi-Profession Autonomous Discovery for roles: {target_roles[:4]} in locations: {target_locations}")
 
-        # 1. Multi-location LinkedIn Public Discovery (Bangladesh Sub-areas & Remote)
-        for role in target_roles[:3]: # Top 3 active roles
+        # Determine if remote worldwide feeds should be included
+        allow_remote = any(l.lower() in ["remote", "worldwide", "global", "any"] for l in target_locations)
+
+        # 1. Multi-location LinkedIn Public Discovery (Exact user-requested locations)
+        for role in target_roles[:4]: # Active target roles
             for loc in target_locations:
                 try:
-                    logger.info(f"Auto-discovering '{role}' in '{loc}'...")
+                    logger.info(f"Auto-discovering '{role}' in '{loc}' on LinkedIn...")
                     found = self.linkedin_scraper.fetch_jobs(keywords=role, location=loc, limit=limit_per_source)
                     for j in found:
                         if j.url and j.url not in seen_urls:
@@ -90,49 +93,53 @@ class AutonomousDiscoveryEngine:
                 except Exception as e:
                     logger.warning(f"Error discovering LinkedIn jobs for {role} in {loc}: {e}")
 
-        # 2. Arbeitnow Discovery (Worldwide Remote & Visa Sponsorship roles)
-        try:
-            logger.info("Auto-discovering global tech jobs with Visa Sponsorship / Remote on Arbeitnow...")
-            arbeitnow_jobs = self._fetch_arbeitnow_jobs(target_roles, limit=limit_per_source)
-            for j in arbeitnow_jobs:
-                if j.url and j.url not in seen_urls:
-                    seen_urls.add(j.url)
-                    discovered_jobs.append(j)
-        except Exception as e:
-            logger.warning(f"Error querying Arbeitnow feed: {e}")
+        # 2-5: Only query global remote job boards if the user allows Remote / Worldwide
+        if allow_remote:
+            # 2. Arbeitnow Discovery (Worldwide Remote & Visa Sponsorship roles)
+            try:
+                logger.info("Auto-discovering global tech jobs with Visa Sponsorship / Remote on Arbeitnow...")
+                arbeitnow_jobs = self._fetch_arbeitnow_jobs(target_roles, limit=limit_per_source)
+                for j in arbeitnow_jobs:
+                    if j.url and j.url not in seen_urls:
+                        seen_urls.add(j.url)
+                        discovered_jobs.append(j)
+            except Exception as e:
+                logger.warning(f"Error querying Arbeitnow feed: {e}")
 
-        # 3. RemoteOK Worldwide Engineering Discovery
-        try:
-            logger.info("Auto-discovering global remote developer listings on RemoteOK...")
-            remoteok_jobs = self._fetch_remoteok_jobs(target_roles, limit=limit_per_source)
-            for j in remoteok_jobs:
-                if j.url and j.url not in seen_urls:
-                    seen_urls.add(j.url)
-                    discovered_jobs.append(j)
-        except Exception as e:
-            logger.warning(f"Error querying RemoteOK feed: {e}")
+            # 3. RemoteOK Worldwide Engineering Discovery
+            try:
+                logger.info("Auto-discovering global remote developer listings on RemoteOK...")
+                remoteok_jobs = self._fetch_remoteok_jobs(target_roles, limit=limit_per_source)
+                for j in remoteok_jobs:
+                    if j.url and j.url not in seen_urls:
+                        seen_urls.add(j.url)
+                        discovered_jobs.append(j)
+            except Exception as e:
+                logger.warning(f"Error querying RemoteOK feed: {e}")
 
-        # 4. Remotive Worldwide Developer Hub
-        try:
-            logger.info("Auto-discovering software engineering roles on Remotive...")
-            remotive_jobs = self._fetch_remotive_jobs(target_roles, limit=limit_per_source)
-            for j in remotive_jobs:
-                if j.url and j.url not in seen_urls:
-                    seen_urls.add(j.url)
-                    discovered_jobs.append(j)
-        except Exception as e:
-            logger.warning(f"Error querying Remotive feed: {e}")
+            # 4. Remotive Worldwide Developer Hub
+            try:
+                logger.info("Auto-discovering software engineering roles on Remotive...")
+                remotive_jobs = self._fetch_remotive_jobs(target_roles, limit=limit_per_source)
+                for j in remotive_jobs:
+                    if j.url and j.url not in seen_urls:
+                        seen_urls.add(j.url)
+                        discovered_jobs.append(j)
+            except Exception as e:
+                logger.warning(f"Error querying Remotive feed: {e}")
 
-        # 5. Jobicy Global Engineering Feeds
-        try:
-            logger.info("Auto-discovering developer listings on Jobicy...")
-            jobicy_jobs = self._fetch_jobicy_jobs(target_roles, limit=limit_per_source)
-            for j in jobicy_jobs:
-                if j.url and j.url not in seen_urls:
-                    seen_urls.add(j.url)
-                    discovered_jobs.append(j)
-        except Exception as e:
-            logger.warning(f"Error querying Jobicy feed: {e}")
+            # 5. Jobicy Global Engineering Feeds
+            try:
+                logger.info("Auto-discovering developer listings on Jobicy...")
+                jobicy_jobs = self._fetch_jobicy_jobs(target_roles, limit=limit_per_source)
+                for j in jobicy_jobs:
+                    if j.url and j.url not in seen_urls:
+                        seen_urls.add(j.url)
+                        discovered_jobs.append(j)
+            except Exception as e:
+                logger.warning(f"Error querying Jobicy feed: {e}")
+        else:
+            logger.info("Remote feeds skipped because target locations are restricted to on-site/local locations.")
 
         logger.info(f"Autonomous Discovery finished: Found {len(discovered_jobs)} total new jobs.")
         return discovered_jobs

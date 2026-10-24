@@ -108,6 +108,8 @@ class AutoPilotService:
                     score = res.get("score", 0)
                     if score >= settings.min_match_score:
                         high_match_count += 1
+                    # Polite throttle pause to prevent Groq TPM/RPM spikes
+                    time.sleep(1.0)
                 except Exception as err:
                     logger.warning(f"Error evaluating job #{job.id}: {err}")
 

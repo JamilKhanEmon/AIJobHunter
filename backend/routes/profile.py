@@ -147,12 +147,28 @@ def update_profile(
 
 
 @router.get("/preferences")
-def get_search_preferences():
+def get_search_preferences(
+    user: Optional[User] = Depends(get_current_user)
+):
     from backend.services.autopilot import autopilot_service
+    # If user is authenticated and has custom preferences saved, return them
+    if user and user.profile and user.profile.search_preferences:
+        up = user.profile.search_preferences
+        return {
+            "positions": up.get("positions", settings.target_positions),
+            "locations": up.get("locations", settings.target_locations),
+            "max_age_days": up.get("max_age_days", 5),
+            "mobility": up.get("mobility", settings.candidate_mobility),
+            "autopilot_running": autopilot_service.is_running,
+            "autopilot_interval_hours": 12.0,
+            "last_run_time": autopilot_service.last_run_time.isoformat() if autopilot_service.last_run_time else None,
+            "last_run_stats": autopilot_service.last_run_stats
+        }
+
     return {
         "positions": settings.target_positions,
         "locations": settings.target_locations,
-        "max_age_days": settings.config_yaml.get("search_preferences", {}).get("max_age_days", 7),
+        "max_age_days": settings.config_yaml.get("search_preferences", {}).get("max_age_days", 5),
         "mobility": settings.candidate_mobility,
         "autopilot_running": autopilot_service.is_running,
         "autopilot_interval_hours": 12.0,
@@ -162,34 +178,50 @@ def get_search_preferences():
 
 
 @router.post("/preferences")
-def update_search_preferences(payload: dict):
+def update_search_preferences(
+    payload: dict,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     from backend.websocket import manager
     positions = payload.get("positions", [])
     locations = payload.get("locations", [])
-    max_age_days = int(payload.get("max_age_days", 7))
+    max_age_days = int(payload.get("max_age_days", 5))
     mobility = payload.get("mobility")
 
-    success = settings.save_search_preferences(
+    if user:
+        user_prof = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        if not user_prof:
+            user_prof = UserProfile(user_id=user.id)
+            db.add(user_prof)
+        user_prof.search_preferences = {
+            "positions": positions,
+            "locations": locations,
+            "max_age_days": max_age_days,
+            "mobility": mobility
+        }
+        db.commit()
+
+    # Also persist to settings for guest fallback
+    settings.save_search_preferences(
         positions=positions,
         locations=locations,
         max_age_days=max_age_days,
         mobility=mobility
     )
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to save search preferences")
 
     manager.broadcast_sync({
         "type": "PREFERENCES_UPDATED",
-        "positions": settings.target_positions,
-        "locations": settings.target_locations,
-        "message": f"Updated search preferences: {len(settings.target_positions)} roles, {len(settings.target_locations)} locations."
+        "positions": positions or settings.target_positions,
+        "locations": locations or settings.target_locations,
+        "message": f"Updated search preferences: {len(positions or settings.target_positions)} roles, {len(locations or settings.target_locations)} locations."
     })
 
     return {
         "success": True,
         "message": "Search preferences updated successfully",
-        "positions": settings.target_positions,
-        "locations": settings.target_locations,
+        "positions": positions or settings.target_positions,
+        "locations": locations or settings.target_locations,
         "max_age_days": max_age_days
     }
 
@@ -207,13 +239,15 @@ def _mask_key(key: str) -> str:
 
 
 @settings_router.get("")
-def get_settings():
-    groq_k = settings.groq_api_key
-    openai_k = settings.openai_api_key
-    anthropic_k = settings.anthropic_api_key
-    gemini_k = settings.gemini_api_key
-    deepseek_k = settings.deepseek_api_key
-    openrouter_k = settings.openrouter_api_key
+def get_settings(user: Optional[User] = Depends(get_current_user)):
+    user_keys = (user.profile.api_keys or {}) if user and user.profile else {}
+
+    groq_k = user_keys.get("groq_api_key") or settings.groq_api_key
+    openai_k = user_keys.get("openai_api_key") or settings.openai_api_key
+    anthropic_k = user_keys.get("anthropic_api_key") or settings.anthropic_api_key
+    gemini_k = user_keys.get("gemini_api_key") or settings.gemini_api_key
+    deepseek_k = user_keys.get("deepseek_api_key") or settings.deepseek_api_key
+    openrouter_k = user_keys.get("openrouter_api_key") or settings.openrouter_api_key
 
     providers_catalog = {
         "groq": {
@@ -294,12 +328,18 @@ def get_settings():
         "candidate_mobility": settings.candidate_mobility,
         "home_country": settings.home_country,
         "home_city": settings.home_city,
+        "is_authenticated": user is not None,
+        "user_email": user.email if user else None,
         "providers": providers_catalog
     }
 
 
 @settings_router.post("")
-def update_settings(payload: dict):
+def update_settings(
+    payload: dict,
+    user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     provider = payload.get("provider", "groq").lower()
     model = payload.get("model", "llama-3.3-70b-versatile")
     api_key = payload.get("api_key")
@@ -324,14 +364,24 @@ def update_settings(payload: dict):
     if legacy_groq_key and legacy_groq_key.strip():
         api_keys["groq_api_key"] = legacy_groq_key.strip()
 
-    success = settings.save_llm_settings(
+    # Save to user profile in DB if user is authenticated
+    if user:
+        user_prof = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        if not user_prof:
+            user_prof = UserProfile(user_id=user.id)
+            db.add(user_prof)
+        current_keys = dict(user_prof.api_keys or {})
+        current_keys.update(api_keys)
+        user_prof.api_keys = current_keys
+        db.commit()
+
+    # Also persist to settings for system fallback
+    settings.save_llm_settings(
         provider=provider,
         model=model,
         api_keys=api_keys,
         ollama_host=ollama_host
     )
-    if not success:
-        raise HTTPException(status_code=500, detail="Failed to save settings to disk")
 
     return {
         "success": True,

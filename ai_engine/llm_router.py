@@ -82,15 +82,15 @@ class LLMRouter:
                     # Sort by speed and token allowance: 20B high-throughput first, then 27B, then 120B (which has low 8k TPM limit)
                     def sort_key(mid: str) -> int:
                         mid_l = mid.lower()
-                        if "gpt-oss-20b" in mid_l:
-                            return 0
-                        if "qwen3.8-27b" in mid_l or "qwen" in mid_l:
-                            return 1
                         if "llama-3.1-8b" in mid_l:
-                            return 2
-                        if "gpt-oss-120b" in mid_l:
-                            return 3
+                            return 0
                         if "llama-3.3-70b" in mid_l:
+                            return 1
+                        if "gpt-oss-20b" in mid_l:
+                            return 2
+                        if "qwen3.8-27b" in mid_l or "qwen" in mid_l:
+                            return 3
+                        if "gpt-oss-120b" in mid_l:
                             return 4
                         return 10
 
@@ -106,6 +106,7 @@ class LLMRouter:
     def _call_groq(self, system_prompt: str, user_prompt: str, temperature: float, key_override: Optional[str] = None, model_override: Optional[str] = None) -> str:
         """Calls Groq Cloud API with dynamic model discovery, 429 rate-limit fallback, and retry."""
         import time
+        import re
         key = (key_override or settings.groq_api_key or "").strip()
         if not key or "your_" in key:
             raise ValueError("Groq API key not configured. Obtain a free key at https://console.groq.com/keys")
@@ -124,11 +125,11 @@ class LLMRouter:
         live_models = self._get_groq_available_models(key)
 
         MODERN_FALLBACKS = [
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile",
             "openai/gpt-oss-20b",
             "qwen/qwen3.8-27b",
-            "openai/gpt-oss-120b",
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant"
+            "openai/gpt-oss-120b"
         ]
 
         chain = []
@@ -139,15 +140,14 @@ class LLMRouter:
             for m in live_models:
                 if m not in chain:
                     chain.append(m)
-        else:
-            for m in MODERN_FALLBACKS:
-                if m not in chain:
-                    chain.append(m)
+
+        for m in MODERN_FALLBACKS:
+            if m not in chain:
+                chain.append(m)
 
         logger.info(f"Groq executing request with model chain: {chain[:5]}")
 
         last_error = ""
-        rate_limit_wait = 0.0
 
         for model_id in chain:
             payload = {
@@ -171,7 +171,6 @@ class LLMRouter:
                                 pass
                         return resp.json()["choices"][0]["message"]["content"]
                     elif resp.status_code == 429:
-                        # Rate limit reached on this model (e.g. 120B hit TPM limit)
                         try:
                             err_msg = resp.json().get("error", {}).get("message", resp.text)
                         except Exception:
@@ -179,10 +178,15 @@ class LLMRouter:
                         last_error = f"Model '{model_id}' TPM/RPM rate limit (HTTP 429): {err_msg}"
                         logger.warning(f"Groq 429 hit for '{model_id}'. Trying next available model in chain...")
 
-                        # Check if a short retry delay was suggested
-                        wait_match = re.search(r"try again in (\d+(?:\.\d+)?)s", err_msg)
-                        if wait_match:
-                            rate_limit_wait = max(rate_limit_wait, float(wait_match.group(1)))
+                        # Smart backoff pause so TPM limit recovers
+                        wait_match_ms = re.search(r"try again in (\d+(?:\.\d+)?)ms", err_msg)
+                        wait_match_s = re.search(r"try again in (\d+(?:\.\d+)?)s", err_msg)
+                        if wait_match_ms:
+                            time.sleep(min(float(wait_match_ms.group(1)) / 1000.0, 1.2))
+                        elif wait_match_s:
+                            time.sleep(min(float(wait_match_s.group(1)), 1.5))
+                        else:
+                            time.sleep(0.6)
                         continue
                     elif resp.status_code in (404, 400):
                         try:

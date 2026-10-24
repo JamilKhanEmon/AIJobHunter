@@ -34,9 +34,15 @@ def init_db():
     # Ensure new columns exist on legacy SQLite databases without wiping data
     from sqlalchemy import text
     with engine.connect() as conn:
-        for table, col in [("jobs", "user_id"), ("applications", "user_id")]:
+        migrations = [
+            ("jobs", "user_id", "INTEGER"),
+            ("applications", "user_id", "INTEGER"),
+            ("user_profiles", "search_preferences", "JSON"),
+            ("user_profiles", "api_keys", "JSON")
+        ]
+        for table, col, col_type in migrations:
             try:
-                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} INTEGER"))
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
                 conn.commit()
             except Exception:
                 pass # Column already exists
