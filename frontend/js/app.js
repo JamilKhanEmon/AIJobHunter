@@ -1414,9 +1414,17 @@ function setupEventListeners() {
     });
   });
 
-  UI.btnSyncAll.addEventListener("click", () => {
-    refreshAllData(true);
-  });
+  if (UI.btnSyncAll) {
+    UI.btnSyncAll.addEventListener("click", () => {
+      refreshAllData(true);
+    });
+  }
+
+  if (UI.btnPurgeAll) {
+    UI.btnPurgeAll.addEventListener("click", (e) => {
+      purgeAllJobs(e);
+    });
+  }
 
   // Autonomous Web Job Discovery
   async function launchAutonomousDiscovery(locationsStr) {
@@ -2113,16 +2121,11 @@ function setupEventListeners() {
     });
   }
 
-  // Clear / Purge All Data
-  if (UI.btnPurgeAll) {
-    UI.btnPurgeAll.addEventListener("click", purgeAllJobs);
-  }
-
-  // Delete Job from Drawer
+  // Drawer Delete Job
   if (UI.btnDrawerDeleteJob) {
-    UI.btnDrawerDeleteJob.addEventListener("click", () => {
+    UI.btnDrawerDeleteJob.addEventListener("click", (e) => {
       if (AppState.selectedJobId) {
-        deleteJob(AppState.selectedJobId);
+        deleteJob(AppState.selectedJobId, e);
       }
     });
   }
@@ -2158,9 +2161,12 @@ window.executeCustom = function(source, inputId) {
 };
 
 // Delete Single Job & Purge All Jobs
-window.deleteJob = async function(jobId) {
+async function deleteJob(jobId, e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (e && e.stopPropagation) e.stopPropagation();
   if (!jobId) return;
-  const target = AppState.jobs.find(j => j.id === jobId);
+
+  const target = (AppState.jobs || []).find(j => j.id === jobId);
   const title = target ? `"${target.title}"` : "this job";
   if (!confirm(`Are you sure you want to delete ${title}?`)) return;
 
@@ -2171,7 +2177,7 @@ window.deleteJob = async function(jobId) {
     appendTerminalLine("DELETED", `Job ID ${jobId} deleted successfully.`, "warn");
 
     // Remove from local memory
-    AppState.jobs = AppState.jobs.filter(j => j.id !== jobId);
+    AppState.jobs = (AppState.jobs || []).filter(j => j.id !== jobId);
 
     // Close drawer if open
     if (AppState.selectedJobId === jobId) {
@@ -2187,12 +2193,22 @@ window.deleteJob = async function(jobId) {
     console.error("Delete error:", err);
     alert("Failed to delete job: " + err.message);
   }
-};
+}
+window.deleteJob = deleteJob;
 
-window.purgeAllJobs = async function() {
-  const count = AppState.jobs.length;
-  if (!confirm(`Are you sure you want to clear and delete all ${count} job listings? This will wipe the database listings completely.`)) {
-    return;
+async function purgeAllJobs(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  const count = (AppState.jobs && AppState.jobs.length) || 0;
+  const ok = confirm(`Are you sure you want to clear and delete all ${count > 0 ? count + ' ' : ''}job listings? This will wipe all saved jobs from the database.`);
+  if (!ok) return;
+
+  const btn = document.getElementById("btn-purge-all");
+  const origHtml = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Clearing...";
   }
 
   try {
@@ -2205,13 +2221,25 @@ window.purgeAllJobs = async function() {
     AppState.selectedJobId = null;
     closeDrawer();
 
+    // Reset UI counters immediately
+    if (UI.navCounterTotal) UI.navCounterTotal.textContent = "0";
+    if (UI.kpiTotal) UI.kpiTotal.textContent = "0";
+    renderDataGrid();
+
     appendTerminalLine("PURGE_SUCCESS", data.message || "All job listings have been cleared.", "success");
     await refreshAllData(false);
+    alert("✓ All job listings have been deleted from the database!");
   } catch (err) {
     console.error("Purge error:", err);
     alert("Failed to clear data: " + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
   }
-};
+}
+window.purgeAllJobs = purgeAllJobs;
 
 // Direct-From-Source Career Portal & Stage Tracking
 window.openCareerPortal = function(jobId) {

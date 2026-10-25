@@ -94,7 +94,7 @@ app.mount("/js", StaticFiles(directory=FRONTEND_DIR / "js"), name="js")
 @app.get("/")
 def serve_index():
     index_path = FRONTEND_DIR / "index.html"
-    return FileResponse(index_path)
+    return FileResponse(index_path, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
 # Catch-all to support SPA refresh
