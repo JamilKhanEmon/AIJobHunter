@@ -76,6 +76,32 @@ async def upload_resume_file(
             db.refresh(user_prof)
 
         first_name = parsed.get('personal_information', {}).get('first_name', user.full_name if user else 'Candidate')
+        pers = parsed.get("personal_information", {})
+        headline = pers.get("headline", "")
+        city = pers.get("city", "Dhaka")
+        country = pers.get("country", "Bangladesh")
+        if headline:
+            try:
+                cfg_path = CONFIG_DIR / "config.yaml"
+                if cfg_path.exists():
+                    with open(cfg_path, "r", encoding="utf-8") as f:
+                        cfg_data = yaml.safe_load(f) or {}
+                    if "search_preferences" not in cfg_data:
+                        cfg_data["search_preferences"] = {}
+                    roles = [headline]
+                    if "ai" in headline.lower():
+                        roles.extend(["AI Engineer", "Full Stack AI Developer", "Machine Learning Engineer"])
+                    for r in cfg_data["search_preferences"].get("positions", []):
+                        if r not in roles:
+                            roles.append(r)
+                    cfg_data["search_preferences"]["positions"] = roles[:4]
+                    cfg_data["search_preferences"]["locations"] = [f"{city}, {country}", "Remote", "Worldwide"]
+                    with open(cfg_path, "w", encoding="utf-8") as f:
+                        yaml.safe_dump(cfg_data, f, sort_keys=False, allow_unicode=True)
+                    settings.reload()
+            except Exception as ex:
+                pass
+
         manager.broadcast_sync({
             "type": "RESUME_PARSED",
             "message": f"Successfully parsed resume for {first_name}! Profile updated."
@@ -94,13 +120,12 @@ async def upload_resume_file(
 
 @router.get("")
 def get_profile(user: Optional[User] = Depends(get_current_user)):
-    """Returns candidate profile for the active authenticated user, or None if guest in multi-user environment."""
+    """Returns candidate profile for the active authenticated user, or global profile_resume.yaml."""
     if user and user.profile:
         profile_data = user.profile.to_candidate_schema()
-    elif user:
-        profile_data = None
     else:
-        profile_data = None
+        settings.reload()
+        profile_data = settings.get_candidate_profile()
 
     return {
         "profile": profile_data,

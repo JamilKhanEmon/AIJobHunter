@@ -141,7 +141,8 @@ class ResumeParser:
         raw_text = self.extract_text(file_bytes, filename)
         logger.info(f"Resume text extracted ({len(raw_text)} chars). Querying AI for structured schema...")
 
-        prompt = RESUME_EXTRACTION_USER_TEMPLATE.format(resume_text=raw_text[:12000])
+        clean_text = re.sub(r'\n{3,}', '\n\n', raw_text).strip()
+        prompt = RESUME_EXTRACTION_USER_TEMPLATE.format(resume_text=clean_text[:5000])
 
         parsed_profile: Optional[Dict[str, Any]] = None
         try:
@@ -240,11 +241,14 @@ class ResumeParser:
             for noise in ["Full Stack", "Full-Stack", "Software Engineer", "AI Engineer", "Developer", "Data Scientist", "AI and Web", "AI and u"]:
                 raw_name_candidate = re.sub(r"(?i)\b" + re.escape(noise) + r"\b", "", raw_name_candidate)
             name_parts = [p.strip() for p in raw_name_candidate.split() if p.strip()]
-            if len(name_parts) >= 2:
-                first_name = name_parts[0]
-                last_name = " ".join(name_parts[1:])
+            if len(name_parts) >= 3 and name_parts[0].upper().rstrip(".") in ["MD", "MOHAMMED", "MOHAMMAD", "DR", "MR"]:
+                first_name = f"{name_parts[0]} {name_parts[1].capitalize()}"
+                last_name = " ".join(p.capitalize() for p in name_parts[2:])
+            elif len(name_parts) >= 2:
+                first_name = name_parts[0].capitalize()
+                last_name = " ".join(p.capitalize() for p in name_parts[1:])
             elif len(name_parts) == 1:
-                first_name = name_parts[0]
+                first_name = name_parts[0].capitalize()
                 last_name = ""
 
         # Headline

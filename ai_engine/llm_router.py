@@ -60,6 +60,8 @@ class LLMRouter:
             return json.loads(raw_text)
         except Exception as e:
             logger.error(f"Failed to parse LLM JSON output: {e}\nRaw was: {raw_text[:200]}")
+            if "personal_information" in system_prompt:
+                return {}
             return self._default_json_eval()
 
     # Provider Implementations
@@ -86,9 +88,9 @@ class LLMRouter:
                             return 0
                         if "llama-3.3-70b" in mid_l:
                             return 1
-                        if "gpt-oss-20b" in mid_l:
+                        if "qwen" in mid_l:
                             return 2
-                        if "qwen3.8-27b" in mid_l or "qwen" in mid_l:
+                        if "gpt-oss-20b" in mid_l:
                             return 3
                         if "gpt-oss-120b" in mid_l:
                             return 4
@@ -125,11 +127,12 @@ class LLMRouter:
         live_models = self._get_groq_available_models(key)
 
         MODERN_FALLBACKS = [
-            "llama-3.1-8b-instant",
-            "llama-3.3-70b-versatile",
-            "openai/gpt-oss-20b",
             "qwen/qwen3.8-27b",
-            "openai/gpt-oss-120b"
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
+            "allam-2-7b",
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile"
         ]
 
         chain = []
@@ -149,6 +152,10 @@ class LLMRouter:
 
         last_error = ""
 
+        # Calculate safe max_tokens so (prompt_tokens + max_tokens) never breaches 8,000 TPM limit
+        est_prompt_tokens = (len(system_prompt) + len(user_prompt)) // 4
+        safe_max_tokens = max(512, min(2048, 7000 - est_prompt_tokens))
+
         for model_id in chain:
             payload = {
                 "model": model_id,
@@ -157,7 +164,7 @@ class LLMRouter:
                     {"role": "user", "content": user_prompt}
                 ],
                 "temperature": temperature,
-                "max_tokens": 4096
+                "max_tokens": safe_max_tokens
             }
             try:
                 with httpx.Client(timeout=35.0) as client:
@@ -170,13 +177,13 @@ class LLMRouter:
                             except Exception:
                                 pass
                         return resp.json()["choices"][0]["message"]["content"]
-                    elif resp.status_code == 429:
+                    elif resp.status_code in (413, 429):
                         try:
                             err_msg = resp.json().get("error", {}).get("message", resp.text)
                         except Exception:
                             err_msg = resp.text
-                        last_error = f"Model '{model_id}' TPM/RPM rate limit (HTTP 429): {err_msg}"
-                        logger.warning(f"Groq 429 hit for '{model_id}'. Trying next available model in chain...")
+                        last_error = f"Model '{model_id}' limit (HTTP {resp.status_code}): {err_msg}"
+                        logger.warning(f"Groq {resp.status_code} hit for '{model_id}'. Trying next available model in chain...")
 
                         # Smart backoff pause so TPM limit recovers
                         wait_match_ms = re.search(r"try again in (\d+(?:\.\d+)?)ms", err_msg)
