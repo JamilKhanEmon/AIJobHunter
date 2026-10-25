@@ -6,14 +6,13 @@ app:
   host: 0.0.0.0
 search_preferences:
   positions:
-  - Full Stack Engineer
+  - Full Stack AI and Automation Engineer
   - AI Engineer
-  - Software Engineer
-  - Python Developer
-  - Backend Engineer
+  - Full Stack AI Developer
+  - Machine Learning Engineer
   locations:
+  - Dhaka, Bangladesh
   - Remote
-  - Bangladesh
   - Worldwide
   remote_only: false
   workplace_types:

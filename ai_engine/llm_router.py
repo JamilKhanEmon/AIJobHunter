@@ -43,26 +43,61 @@ class LLMRouter:
             logger.info("Falling back to local heuristic response generator.")
             return self._heuristic_fallback(system_prompt, user_prompt)
 
+    def _repair_json_string(self, text: str) -> str:
+        text = re.sub(r"^```(?:json)?\s*", "", text.strip())
+        text = re.sub(r"\s*```$", "", text.strip())
+        idx = text.find("{")
+        if idx == -1:
+            return text
+        text = text[idx:]
+        text = re.sub(r',\s*"[^"]*$', '', text)
+        text = re.sub(r'{\s*"[^"]*$', '{', text)
+        if text.count('"') % 2 != 0:
+            text += '"'
+        open_braces = 0
+        open_brackets = 0
+        in_string = False
+        escape = False
+        for char in text:
+            if escape:
+                escape = False
+                continue
+            if char == '\\':
+                escape = True
+                continue
+            if char == '"':
+                in_string = not in_string
+                continue
+            if not in_string:
+                if char == '{': open_braces += 1
+                elif char == '}': open_braces -= 1
+                elif char == '[': open_brackets += 1
+                elif char == ']': open_brackets -= 1
+        text += (']' * max(0, open_brackets)) + ('}' * max(0, open_braces))
+        return text
+
     def generate_json(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         """Ensures the LLM output is parsed into a clean JSON dictionary."""
         raw_text = self.generate(system_prompt, user_prompt)
-        # Extract json markdown if wrapped in ```json ... ```
         json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_text)
         if json_match:
             raw_text = json_match.group(1).strip()
         else:
-            # Look for outermost braces
             brace_match = re.search(r"(\{[\s\S]*\})", raw_text)
             if brace_match:
                 raw_text = brace_match.group(1).strip()
 
         try:
             return json.loads(raw_text)
-        except Exception as e:
-            logger.error(f"Failed to parse LLM JSON output: {e}\nRaw was: {raw_text[:200]}")
-            if "personal_information" in system_prompt:
-                return {}
-            return self._default_json_eval()
+        except Exception:
+            try:
+                repaired = self._repair_json_string(raw_text)
+                return json.loads(repaired)
+            except Exception as e:
+                logger.info(f"Could not parse LLM JSON (falling back): {e}")
+                if "personal_information" in system_prompt:
+                    return {}
+                return self._default_json_eval()
 
     # Provider Implementations
     def _get_groq_available_models(self, key: str) -> List[str]:

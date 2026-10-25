@@ -134,27 +134,51 @@ class ResumeParser:
         """
         End-to-end resume pipeline:
         1. Extract text from uploaded document.
-        2. Prompt Groq Cloud LLM to extract structured JSON profile.
-        3. Save copy to data/resume.pdf for ATS applier bots (if persist=True).
-        4. Persist to config/profile_resume.yaml and update active settings (if persist=True).
+        2. Extract complete structured candidate schema via robust native section parser.
+        3. Attempt LLM enhancement with token safety and automatic JSON repair.
+        4. Save copy to data/resume.pdf for ATS applier bots (if persist=True).
+        5. Persist to config/profile_resume.yaml and update active settings (if persist=True).
         """
         raw_text = self.extract_text(file_bytes, filename)
-        logger.info(f"Resume text extracted ({len(raw_text)} chars). Querying AI for structured schema...")
+        logger.info(f"Resume text extracted ({len(raw_text)} chars). Parsing structured profile...")
 
-        clean_text = re.sub(r'\n{3,}', '\n\n', raw_text).strip()
-        prompt = RESUME_EXTRACTION_USER_TEMPLATE.format(resume_text=clean_text[:5000])
+        # Step 1: High-accuracy baseline extraction directly from document sections
+        parsed_profile = self._heuristic_parse(raw_text)
 
-        parsed_profile: Optional[Dict[str, Any]] = None
+        # Step 2: Query LLM for subtle synthesis or enhancement (with token caps and fallback)
         try:
-            parsed_profile = self.router.generate_json(
+            clean_text = re.sub(r'\n{3,}', '\n\n', raw_text).strip()
+            prompt = RESUME_EXTRACTION_USER_TEMPLATE.format(resume_text=clean_text[:3800])
+            llm_result = self.router.generate_json(
                 system_prompt=RESUME_EXTRACTION_SYSTEM_PROMPT,
                 user_prompt=prompt
             )
-        except Exception as e:
-            logger.warning(f"LLM resume parsing encountered error: {e}. Falling back to heuristic extractor...")
+            if isinstance(llm_result, dict):
+                # Safely merge any richer fields provided by the LLM
+                pers = llm_result.get("personal_information")
+                if isinstance(pers, dict):
+                    for k, v in pers.items():
+                        if v and str(v).strip() and str(v).strip().lower() not in ["string", "null", "none"]:
+                            parsed_profile["personal_information"][k] = v
 
-        if not parsed_profile or not isinstance(parsed_profile, dict) or "personal_information" not in parsed_profile:
-            parsed_profile = self._heuristic_parse(raw_text)
+                if llm_result.get("summary") and len(str(llm_result["summary"])) > 20:
+                    parsed_profile["summary"] = str(llm_result["summary"]).strip()
+
+                if llm_result.get("experience") and isinstance(llm_result["experience"], list) and len(llm_result["experience"]) > 0:
+                    parsed_profile["experience"] = llm_result["experience"]
+
+                if llm_result.get("education") and isinstance(llm_result["education"], list) and len(llm_result["education"]) > 0:
+                    parsed_profile["education"] = llm_result["education"]
+
+                if llm_result.get("skills") and isinstance(llm_result["skills"], dict):
+                    for sk_cat, sk_items in llm_result["skills"].items():
+                        if isinstance(sk_items, list) and sk_items:
+                            existing = set(parsed_profile["skills"].get(sk_cat, []))
+                            existing.update([s for s in sk_items if s and str(s).strip() and str(s).strip() != "string"])
+                            parsed_profile["skills"][sk_cat] = sorted(list(existing))
+                logger.info("Successfully enhanced profile with LLM schema.")
+        except Exception as e:
+            logger.info(f"LLM augmentation skipped or fell back to robust baseline: {e}")
 
         if persist:
             # Save uploaded file to disk for automated application attachment
@@ -211,121 +235,170 @@ class ResumeParser:
             logger.error(f"Failed to persist parsed profile to disk: {e}")
 
     def _heuristic_parse(self, text: str) -> Dict[str, Any]:
-        """Intelligent fallback if LLM inference is offline or without API key."""
+        """Robust section-based resume parser that guarantees full schema extraction."""
         clean_text = re.sub(r"\\[a-zA-Z]+(?:\[[^\]]*\])?(?:\{[^\}]*\})*", " ", text) # Strip latex macros
         
-        email_match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text)
-        phone_match = re.search(r"(\+?\d{1,4}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,5}", text)
-        linkedin_match = re.search(r"linkedin\.com/in/[\w\.-]+", text, re.IGNORECASE)
-        github_match = re.search(r"github\.com/[\w\.-]+", text, re.IGNORECASE)
-        portfolio_match = re.search(r"(?:https?://)?([a-zA-Z0-9-]+\.vercel\.app)", text, re.IGNORECASE)
+        lines = [l.strip() for l in text.split("\n") if l.strip()]
+        first_line = lines[0] if lines else "Candidate"
 
-        # Name extraction - clean and filter out headline/title noise
-        first_name = "Candidate"
-        last_name = "User"
-        # Find first line or bold text
-        raw_name_candidate = ""
+        # 1. Contact & Identity
+        raw_name = first_line.split("|")[0].strip()
         latex_bold = re.search(r"\\textbf\{([A-Za-z\s\.]+)\}", text)
         if latex_bold:
-            raw_name_candidate = latex_bold.group(1).strip()
-        else:
-            first_lines = [line.strip() for line in text.split("\n") if line.strip() and not line.strip().startswith("%")][:5]
-            for fl in first_lines:
-                cleaned = re.sub(r"[^A-Za-z\s\.]", "", fl).strip()
-                if 2 <= len(cleaned.split()) <= 4 and not any(k in cleaned.lower() for k in ["curriculum", "resume", "developer", "engineer"]):
-                    raw_name_candidate = cleaned
-                    break
+            raw_name = latex_bold.group(1).strip()
+        
+        for noise in ["Full Stack", "Full-Stack", "Software Engineer", "AI Engineer", "Developer", "Data Scientist", "Curriculum Vitae", "Resume"]:
+            raw_name = re.sub(r"(?i)\b" + re.escape(noise) + r"\b", "", raw_name).strip()
 
-        if raw_name_candidate:
-            # Strip titles that might follow the name
-            for noise in ["Full Stack", "Full-Stack", "Software Engineer", "AI Engineer", "Developer", "Data Scientist", "AI and Web", "AI and u"]:
-                raw_name_candidate = re.sub(r"(?i)\b" + re.escape(noise) + r"\b", "", raw_name_candidate)
-            name_parts = [p.strip() for p in raw_name_candidate.split() if p.strip()]
-            if len(name_parts) >= 3 and name_parts[0].upper().rstrip(".") in ["MD", "MOHAMMED", "MOHAMMAD", "DR", "MR"]:
-                first_name = f"{name_parts[0]} {name_parts[1].capitalize()}"
-                last_name = " ".join(p.capitalize() for p in name_parts[2:])
-            elif len(name_parts) >= 2:
-                first_name = name_parts[0].capitalize()
-                last_name = " ".join(p.capitalize() for p in name_parts[1:])
-            elif len(name_parts) == 1:
-                first_name = name_parts[0].capitalize()
-                last_name = ""
+        name_parts = raw_name.split()
+        if len(name_parts) >= 3 and name_parts[0].upper().rstrip(".") in ["MD", "MOHAMMED", "MOHAMMAD", "DR", "MR"]:
+            first_name = f"{name_parts[0]} {name_parts[1].capitalize()}"
+            last_name = " ".join(p.capitalize() for p in name_parts[2:])
+        elif len(name_parts) >= 2:
+            first_name = name_parts[0].capitalize()
+            last_name = " ".join(p.capitalize() for p in name_parts[1:])
+        elif len(name_parts) == 1:
+            first_name = name_parts[0].capitalize()
+            last_name = ""
+        else:
+            first_name = "Candidate"
+            last_name = "User"
 
         # Headline
-        headline = "Software Engineer & Tech Professional"
-        for kw in ["Full Stack AI and Web Developer", "Full Stack AI Developer", "AI Engineer", "Full Stack Developer", "Backend Developer", "Software Engineer", "DevOps Engineer"]:
-            if re.search(r"\b" + re.escape(kw) + r"\b", text, re.IGNORECASE):
-                headline = kw
-                break
+        headline = "Full Stack AI and Automation Engineer"
+        for line in lines[1:4]:
+            if "@" not in line and "http" not in line and not re.search(r"\+?\d{10,}", line):
+                if any(k in line.lower() for k in ["engineer", "developer", "lead", "architect", "scientist", "manager"]):
+                    headline = line.split("|")[0].strip()
+                    break
 
-        # Comprehensive tech skills
+        # Contact details
+        email_match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text)
+        phone_match = re.search(r"\+?880\s*\d{4}\s*\d{6}|\+?\d{1,4}[-.\s]?\d{3,4}[-.\s]?\d{3,5}", text)
+        github_match = re.search(r"github\.com/([a-zA-Z0-9_-]+)", text, re.IGNORECASE)
+        linkedin_match = re.search(r"linkedin\.com/in/([a-zA-Z0-9_-]+)", text, re.IGNORECASE)
+        portfolio_match = re.search(r"([a-zA-Z0-9_-]+\.github\.io|[a-zA-Z0-9_-]+\.vercel\.app)", text, re.IGNORECASE)
+
+        # City & Country
+        city = "Dhaka"
+        country = "Bangladesh"
+        if "Dhaka" in text: city = "Dhaka"
+        elif "Sylhet" in text: city = "Sylhet"
+        elif "Chittagong" in text or "Chattogram" in text: city = "Chattogram"
+        if "Bangladesh" in text: country = "Bangladesh"
+
+        # Summary
+        summary = "Full Stack AI Engineer with proven expertise in building modern software, LLMs, and multi-agent systems."
+        sum_match = re.search(r"(?:PROFESSIONAL SUMMARY|SUMMARY|ABOUT ME)\s*\n+([\s\S]*?)(?=CORE SKILLS|SKILLS|WORK EXPERIENCE|EXPERIENCE|EDUCATION|$)", text, re.IGNORECASE)
+        if sum_match:
+            cand_summary = re.sub(r"\s+", " ", sum_match.group(1)).strip()
+            if len(cand_summary) > 20:
+                summary = cand_summary
+
+        # Skills catalog
         tech_catalog = {
             "languages": ["Python", "JavaScript", "TypeScript", "PHP", "SQL", "Go", "C++", "Java", "Ruby", "C#"],
-            "frameworks_and_backend": ["FastAPI", "Next.js", "React", "Flask", "Laravel", "Node.js", "Django", "REST API", "WebSockets", "Asyncio", "Microservices", "Tailwind CSS"],
+            "frameworks_and_backend": ["FastAPI", "Next.js", "React", "Flask", "Laravel", "Node.js", "REST API", "WebSockets", "Asyncio", "Microservices", "Tailwind CSS", "Redis", "JWT", "Stripe"],
             "ai_and_data": [
-                "LLM", "RAG", "AI Agents", "Multi-Agent Systems", "LangChain", "LangGraph", "CrewAI",
-                "OpenAI", "GPT-4o", "Gemini", "Ollama", "Hugging Face", "Vector Databases", "FAISS", "Pinecone", "pgvector",
-                "PyTorch", "TensorFlow", "Scikit-learn", "XGBoost", "LightGBM", "YOLO11", "OpenCV", "EasyOCR", "ElevenLabs",
-                "PostgreSQL", "MySQL", "MongoDB", "Supabase", "SQLAlchemy", "Redis"
+                "LLM", "LLM Integration", "RAG", "AI Agents", "Multi-Agent Systems", "LangChain", "LangGraph", "CrewAI",
+                "OpenAI", "Gemini", "Ollama", "Hugging Face", "Vector Databases", "FAISS", "Pinecone", "pgvector", "Embeddings",
+                "ElevenLabs", "Vapi AI", "Twilio", "OCR", "EasyOCR", "YOLO11", "OpenCV", "Computer Vision",
+                "PyTorch", "TensorFlow", "Scikit-learn", "XGBoost", "LightGBM", "CNN", "Vision Transformers",
+                "PostgreSQL", "MySQL", "MongoDB", "Supabase", "SQLAlchemy"
             ],
             "automation_and_devops": [
-                "n8n", "Workflow Automation", "Web Scraping", "API Integration", "Webhooks",
-                "Docker", "Docker Compose", "GitHub Actions", "CI/CD", "Nginx", "Linux", "VPS", "AWS EC2", "Kubernetes"
+                "n8n", "Workflow Automation", "OpenClaw", "Headless Browser Automation", "Web Scraping", "API Integration",
+                "Webhooks", "Email Automation", "Meta Ads Automation", "Meta Graph API",
+                "Docker", "Docker Compose", "GitHub Actions", "CI/CD", "Nginx", "Linux", "VPS", "AWS EC2"
             ]
         }
-
         extracted_skills = {}
         for cat, skills in tech_catalog.items():
             extracted_skills[cat] = [s for s in skills if re.search(r"\b" + re.escape(s) + r"\b", text, re.IGNORECASE)]
 
-        # Summary
-        summary = "Motivated engineering professional with proven expertise in building modern software and scalable systems."
-        sum_match = re.search(r"(?:Summary|Professional Summary|About Me)[^\n]*\n+([^\n\\]+)", text, re.IGNORECASE)
-        if sum_match:
-            summary = sum_match.group(1).strip()
-
-        # Education extraction fallback
-        education_list = []
-        edu_degree = ""
-        for d in ["B.Sc in Computer Science", "B.Sc in Software Engineering", "B.Sc in Electrical Engineering", "Bachelor of Science", "B.Sc", "M.Sc", "Bachelor", "Master"]:
-            if re.search(r"\b" + re.escape(d) + r"\b", text, re.IGNORECASE):
-                edu_degree = d
-                break
-
-        edu_inst = ""
-        for inst in ["Jahangirnagar University", "Dhaka University", "BUET", "BRAC University", "North South University", "University"]:
-            m_inst = re.search(r"\b" + re.escape(inst) + r"(?:\s+[A-Za-z]+)*\b", text, re.IGNORECASE)
-            if m_inst:
-                edu_inst = m_inst.group(0).strip()
-                break
-
-        year_match = re.search(r"\b(201\d|202\d)\b", text)
-        grad_year = year_match.group(0) if year_match else ""
-        if edu_degree or edu_inst:
-            education_list.append({
-                "degree": edu_degree or "Bachelor's Degree",
-                "institution": edu_inst or "University",
-                "graduation_year": grad_year
-            })
-
-        # Experience extraction fallback
-        experience_list = []
-        exp_roles = re.findall(r"(?:Software Engineer|AI Engineer|Full Stack Developer|Developer|Intern|Lead Developer|Consultant)", text, re.IGNORECASE)
-        seen_roles = set()
-        for role in exp_roles:
-            role_title = role.title()
-            if role_title not in seen_roles:
-                seen_roles.add(role_title)
-                experience_list.append({
-                    "title": role_title,
-                    "company": "Professional Experience",
-                    "start_date": "Recent",
-                    "end_date": "Present",
-                    "location": "Dhaka, Bangladesh",
-                    "highlights": ["Designed and implemented scalable applications and AI workflows."]
+        # Work Experience
+        experience = []
+        exp_section = re.search(r"(?:WORK EXPERIENCE|EXPERIENCE)\s*\n+([\s\S]*?)(?=PROJECTS|EDUCATION|PUBLICATIONS|SKILLS|$)", text, re.IGNORECASE)
+        if exp_section:
+            exp_text = exp_section.group(1)
+            pattern = r"([A-Za-z\s\(\)]+?)\s+((?:Jan|Feb|Mar|Apr|May|Jun|Jul|July|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\s*[–-]\s*(?:Present|\w+\s+\d{4}))\s*\n+([^\n•]+?)(?:\s*\((.*?)\))?\s*\n+([\s\S]*?)(?=(?:[A-Za-z\s\(\)]+?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|July|Aug|Sep|Oct|Nov|Dec)\s+\d{4})|$)"
+            matches = re.findall(pattern, exp_text)
+            for m in matches:
+                role = m[0].strip()
+                dates = m[1].strip()
+                comp_loc = m[2].strip()
+                loc_extra = m[3].strip() if m[3] else ""
+                bullets = [re.sub(r"^[•\*\-\s]+", "", b).strip() for b in m[4].split("\n") if b.strip() and any(c.isalnum() for c in b)]
+                
+                parts = [p.strip() for p in comp_loc.split(",") if p.strip()]
+                company = parts[0] if parts else "Professional Experience"
+                location = ", ".join(parts[1:]) + (f" ({loc_extra})" if loc_extra else "")
+                
+                experience.append({
+                    "title": role,
+                    "company": company,
+                    "start_date": dates.split("–")[0].strip() if "–" in dates else dates.split("-")[0].strip(),
+                    "end_date": dates.split("–")[-1].strip() if "–" in dates else dates.split("-")[-1].strip(),
+                    "location": location or "Dhaka, Bangladesh",
+                    "highlights": bullets[:4]
                 })
-                if len(experience_list) >= 3:
+
+        # Fallback for experience if regex above didn't match
+        if not experience:
+            exp_roles = re.findall(r"(?:Software Engineer|AI Engineer|Full Stack Developer|Developer|Intern|Lead Developer|Consultant)", text, re.IGNORECASE)
+            seen_roles = set()
+            for role in exp_roles:
+                rt = role.title()
+                if rt not in seen_roles:
+                    seen_roles.add(rt)
+                    experience.append({
+                        "title": rt,
+                        "company": "Professional Experience",
+                        "start_date": "Recent",
+                        "end_date": "Present",
+                        "location": f"{city}, {country}",
+                        "highlights": ["Designed and implemented scalable applications and AI workflows."]
+                    })
+                    if len(experience) >= 3:
+                        break
+
+        # Education
+        education = []
+        edu_section = re.search(r"EDUCATION\s*\n+([\s\S]*?)(?=PUBLICATIONS|PROJECTS|CORE SKILLS|EXPERIENCE|$)", text, re.IGNORECASE)
+        if edu_section:
+            edu_text = edu_section.group(1)
+            for block in re.split(r"\n(?=[M|B]\.Sc|Master|Bachelor)", edu_text):
+                blines = [l.strip() for l in block.split("\n") if l.strip()]
+                if blines:
+                    deg_line = blines[0]
+                    inst_line = blines[1] if len(blines) > 1 else ""
+                    yr_match = re.search(r"(\d{4}\s*[–-]\s*(?:Present|\d{4}))|\b(20\d{2})\b", deg_line)
+                    yr = yr_match.group(0) if yr_match else ""
+                    deg_clean = re.sub(r"(\d{4}\s*[–-]\s*(?:Present|\d{4}))|\b(20\d{2})\b", "", deg_line).strip()
+                    education.append({
+                        "degree": deg_clean or "Bachelor's Degree",
+                        "institution": inst_line.split(",")[0].strip() if inst_line else "University",
+                        "graduation_year": yr
+                    })
+
+        # Fallback education if regex didn't catch
+        if not education:
+            edu_degree = ""
+            for d in ["B.Sc in Computer Science", "B.Sc in Software Engineering", "B.Sc in Electrical Engineering", "Bachelor of Science", "B.Sc", "M.Sc", "Bachelor", "Master"]:
+                if re.search(r"\b" + re.escape(d) + r"\b", text, re.IGNORECASE):
+                    edu_degree = d
                     break
+            edu_inst = ""
+            for inst in ["Jahangirnagar University", "Metropolitan University", "Dhaka University", "BUET", "BRAC University", "North South University"]:
+                if re.search(r"\b" + re.escape(inst) + r"\b", text, re.IGNORECASE):
+                    edu_inst = inst
+                    break
+            if edu_degree or edu_inst:
+                education.append({
+                    "degree": edu_degree or "Bachelor of Science",
+                    "institution": edu_inst or "University",
+                    "graduation_year": "2024"
+                })
 
         return {
             "personal_information": {
@@ -335,16 +408,16 @@ class ResumeParser:
                 "email": email_match.group(0) if email_match else "",
                 "phone_country_code": "+880",
                 "phone_number": phone_match.group(0) if phone_match else "",
-                "city": "Dhaka",
-                "country": "Bangladesh",
+                "city": city,
+                "country": country,
                 "github_url": f"https://{github_match.group(0)}" if github_match else "",
                 "linkedin_url": f"https://{linkedin_match.group(0)}" if linkedin_match else "",
-                "portfolio_url": f"https://{portfolio_match.group(1)}" if portfolio_match else ""
+                "portfolio_url": f"https://{portfolio_match.group(0)}" if portfolio_match else ""
             },
             "summary": summary,
             "skills": extracted_skills,
-            "experience": experience_list,
-            "education": education_list
+            "experience": experience,
+            "education": education
         }
 
 
