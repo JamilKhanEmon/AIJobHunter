@@ -3,8 +3,20 @@ config/secrets.yaml
 config/profile_resume.yaml
 .env
 .env.*
+*.env
 
-# Python caches
+# Local Databases, User Data & Runtime Storage
+data/*
+!data/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+
+# Chrome Profiles & Automated Screenshots
+data/chrome_profile/
+data/screenshots/
+
+# Python caches & virtual environments
 __pycache__/
 *.py[cod]
 *$py.class
@@ -14,14 +26,6 @@ env/
 venv/
 .venv/
 ENV/
-
-# Data & Chrome Profiles
-data/chrome_profile/
-data/screenshots/
-data/*.db
-data/*.sqlite
-data/*.pdf
-data/resume.txt
 
 # OS & Editor files
 .DS_Store

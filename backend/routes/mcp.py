@@ -3,9 +3,10 @@ MCP Management & Info Endpoints.
 Allows the frontend dashboard and remote clients to inspect registered MCP tools and config.
 """
 
-from fastapi import APIRouter
+import sys
 from pathlib import Path
 import json
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/mcp", tags=["MCP"])
 
@@ -27,6 +28,10 @@ def get_mcp_status():
         {"name": "get_application_pipeline", "description": "Returns full overview of tracked job applications."}
     ]
 
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    mcp_script = str(base_dir / "mcp_server.py")
+    python_exe = sys.executable or "python3"
+
     return {
         "status": "ready",
         "server_name": "JobHunter AI",
@@ -36,9 +41,9 @@ def get_mcp_status():
         "config_example": {
             "mcpServers": {
                 "jobhunter-ai": {
-                    "command": "/opt/anaconda3/bin/python3",
-                    "args": ["/Users/jamil/Desktop/job/mcp_server.py"],
-                    "env": {"PYTHONPATH": "/Users/jamil/Desktop/job"}
+                    "command": python_exe,
+                    "args": [mcp_script],
+                    "env": {"PYTHONPATH": str(base_dir)}
                 }
             }
         }

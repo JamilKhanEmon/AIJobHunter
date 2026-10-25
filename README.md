@@ -514,7 +514,7 @@ docker compose down
 
 ## 🤖 Model Context Protocol (MCP) Integration
 
-JobHunter AI includes an official **Model Context Protocol (MCP)** server ([`mcp_server.py`](file:///Users/jamil/Desktop/job/mcp_server.py)) that connects seamlessly to **Claude Desktop**, **Cursor**, **Antigravity**, or remote chatbots with **zero manual tokens required**.
+JobHunter AI includes an official **Model Context Protocol (MCP)** server (`mcp_server.py`) that connects seamlessly to **Claude Desktop**, **Cursor**, **Antigravity**, or remote chatbots with **zero manual tokens required**.
 
 ### 🌟 Registered MCP Tools (11 Powerful Capabilities)
 
@@ -532,7 +532,7 @@ JobHunter AI includes an official **Model Context Protocol (MCP)** server ([`mcp
 
 ### 🔌 Connecting to Claude Desktop / Cursor in 30 Seconds
 
-Copy the contents of [`claude_desktop_config.json`](file:///Users/jamil/Desktop/job/claude_desktop_config.json) to your Claude Desktop configuration file:
+Copy the contents of `claude_desktop_config.json` to your Claude Desktop configuration file:
 
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -541,12 +541,12 @@ Copy the contents of [`claude_desktop_config.json`](file:///Users/jamil/Desktop/
 {
   "mcpServers": {
     "jobhunter-ai": {
-      "command": "/opt/anaconda3/bin/python3",
+      "command": "python3",
       "args": [
-        "/Users/jamil/Desktop/job/mcp_server.py"
+        "/path/to/AIJobHunter/mcp_server.py"
       ],
       "env": {
-        "PYTHONPATH": "/Users/jamil/Desktop/job"
+        "PYTHONPATH": "/path/to/AIJobHunter"
       }
     }
   }
