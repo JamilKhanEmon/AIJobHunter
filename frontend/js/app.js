@@ -2,26 +2,6 @@
  * AI Job Hunter - Enterprise Application Controller.
  */
 
-// Global Authenticated Fetch Wrapper (Seamless Bearer Token attachment)
-const _nativeFetch = window.fetch;
-window.fetch = function(url, options = {}) {
-  const token = localStorage.getItem("jobhunter_token");
-  if (token && typeof url === "string" && url.startsWith("/api/")) {
-    options = options || {};
-    options.headers = options.headers || {};
-    if (options.headers instanceof Headers) {
-      if (!options.headers.has("Authorization")) {
-        options.headers.set("Authorization", `Bearer ${token}`);
-      }
-    } else {
-      if (!options.headers["Authorization"]) {
-        options.headers["Authorization"] = `Bearer ${token}`;
-      }
-    }
-  }
-  return _nativeFetch(url, options);
-};
-
 // Application State
 const AppState = {
   jobs: [],
@@ -154,238 +134,6 @@ window.copyToClipboard = function(text, label, btnElem) {
   });
 };
 
-// Auth State & Controller
-// Auth State & Controller
-async function checkAuthStatus() {
-  const token = localStorage.getItem("jobhunter_token");
-  const userBadge = document.getElementById("user-badge-name");
-  const btnLogout = document.getElementById("btn-user-logout");
-  const radarAuthLabel = document.getElementById("radar-auth-label");
-  const pageLoggedIn = document.getElementById("auth-page-logged-in");
-  const pageLoggedOut = document.getElementById("auth-page-logged-out");
-  const pageUserName = document.getElementById("auth-page-user-name");
-  const pageUserEmail = document.getElementById("auth-page-user-email");
-  const pageAvatar = document.getElementById("auth-page-avatar");
-  const navAuthBadge = document.getElementById("nav-auth-badge");
-  const navAuthLabel = document.getElementById("nav-auth-label");
-
-  function renderLoggedOut() {
-    AppState.currentUser = null;
-    if (userBadge) userBadge.textContent = "Sign In / Register";
-    if (radarAuthLabel) radarAuthLabel.textContent = "👤 Guest Mode (Click to Sign In / Multi-User)";
-    if (btnLogout) btnLogout.style.display = "none";
-    if (pageLoggedIn) pageLoggedIn.style.display = "none";
-    if (pageLoggedOut) pageLoggedOut.style.display = "block";
-    if (navAuthBadge) {
-      navAuthBadge.textContent = "Login";
-      navAuthBadge.style.color = "#60a5fa";
-    }
-    if (navAuthLabel) navAuthLabel.textContent = "Sign In / Account";
-  }
-
-  if (!token) {
-    renderLoggedOut();
-    return null;
-  }
-
-  try {
-    const res = await fetch("/api/auth/me");
-    if (res.ok) {
-      const data = await res.json();
-      AppState.currentUser = data.user;
-      const displayName = data.user.full_name || data.user.email.split("@")[0];
-      const initial = (data.user.full_name ? data.user.full_name[0] : data.user.email[0]).toUpperCase();
-
-      if (userBadge) userBadge.textContent = displayName;
-      if (radarAuthLabel) radarAuthLabel.textContent = `✓ Active User: ${displayName} (Isolated CV & Keys)`;
-      if (btnLogout) btnLogout.style.display = "inline-flex";
-
-      if (pageLoggedIn) pageLoggedIn.style.display = "block";
-      if (pageLoggedOut) pageLoggedOut.style.display = "none";
-      if (pageUserName) pageUserName.textContent = data.user.full_name || "Candidate User";
-      if (pageUserEmail) pageUserEmail.textContent = data.user.email;
-      if (pageAvatar) pageAvatar.textContent = initial;
-
-      if (navAuthBadge) {
-        navAuthBadge.textContent = "Online";
-        navAuthBadge.style.color = "#34d399";
-      }
-      if (navAuthLabel) navAuthLabel.textContent = "My Account";
-
-      return data.user;
-    } else {
-      localStorage.removeItem("jobhunter_token");
-      renderLoggedOut();
-      return null;
-    }
-  } catch (e) {
-    renderLoggedOut();
-    return null;
-  }
-}
-
-function setupAuthUI() {
-  const modalOverlay = document.getElementById("auth-modal-overlay");
-  const btnOpenModal = document.getElementById("btn-open-auth-modal");
-  const btnCloseModal = document.getElementById("btn-close-auth-modal");
-  const tabLogin = document.getElementById("tab-auth-login");
-  const tabRegister = document.getElementById("tab-auth-register");
-  const nameGroup = document.getElementById("auth-name-group");
-  const modalTitle = document.getElementById("auth-modal-title");
-  const btnSubmit = document.getElementById("btn-auth-submit");
-  const errorMsg = document.getElementById("auth-error-msg");
-  const btnLogout = document.getElementById("btn-user-logout");
-
-  // Page-level elements
-  const pageTabLogin = document.getElementById("auth-page-tab-login");
-  const pageTabRegister = document.getElementById("auth-page-tab-register");
-  const pageNameGroup = document.getElementById("auth-page-name-group");
-  const btnPageSubmit = document.getElementById("btn-auth-page-submit");
-  const pageFeedback = document.getElementById("auth-page-feedback");
-  const btnPageLogout = document.getElementById("btn-auth-page-logout");
-
-  let isRegisterMode = false;
-
-  function setPageMode(register) {
-    isRegisterMode = register;
-    if (pageFeedback) pageFeedback.style.display = "none";
-    if (register) {
-      if (pageTabRegister) {
-        pageTabRegister.style.background = "rgba(99, 102, 241, 0.25)";
-        pageTabRegister.style.color = "#fff";
-        pageTabRegister.style.border = "1px solid rgba(99, 102, 241, 0.5)";
-      }
-      if (pageTabLogin) {
-        pageTabLogin.style.background = "transparent";
-        pageTabLogin.style.color = "#94a3b8";
-        pageTabLogin.style.border = "none";
-      }
-      if (pageNameGroup) pageNameGroup.style.display = "block";
-      if (btnPageSubmit) btnPageSubmit.textContent = "Create Account";
-    } else {
-      if (pageTabLogin) {
-        pageTabLogin.style.background = "rgba(99, 102, 241, 0.25)";
-        pageTabLogin.style.color = "#fff";
-        pageTabLogin.style.border = "1px solid rgba(99, 102, 241, 0.5)";
-      }
-      if (pageTabRegister) {
-        pageTabRegister.style.background = "transparent";
-        pageTabRegister.style.color = "#94a3b8";
-        pageTabRegister.style.border = "none";
-      }
-      if (pageNameGroup) pageNameGroup.style.display = "none";
-      if (btnPageSubmit) btnPageSubmit.textContent = "Sign In";
-    }
-  }
-
-  if (pageTabLogin) pageTabLogin.addEventListener("click", () => setPageMode(false));
-  if (pageTabRegister) pageTabRegister.addEventListener("click", () => setPageMode(true));
-
-  // Dedicated Page Form Submission
-  if (btnPageSubmit) {
-    btnPageSubmit.addEventListener("click", async () => {
-      const email = document.getElementById("auth-page-email-input")?.value.trim() || "";
-      const password = document.getElementById("auth-page-password-input")?.value.trim() || "";
-      const name = document.getElementById("auth-page-name-input")?.value.trim() || "";
-
-      if (!email || !password) {
-        if (pageFeedback) {
-          pageFeedback.style.display = "block";
-          pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
-          pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
-          pageFeedback.style.color = "#fca5a5";
-          pageFeedback.textContent = "Please provide both email address and password.";
-        }
-        return;
-      }
-
-      btnPageSubmit.disabled = true;
-      btnPageSubmit.textContent = "Authenticating...";
-
-      try {
-        const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
-        const body = { email, password };
-        if (isRegisterMode && name) body.full_name = name;
-
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-
-        if (res.ok && data.access_token) {
-          localStorage.setItem("jobhunter_token", data.access_token);
-          if (pageFeedback) {
-            pageFeedback.style.display = "block";
-            pageFeedback.style.background = "rgba(16, 185, 129, 0.15)";
-            pageFeedback.style.border = "1px solid rgba(16, 185, 129, 0.35)";
-            pageFeedback.style.color = "#34d399";
-            pageFeedback.textContent = "✓ Authentication successful! Loading your private workspace...";
-          }
-          await checkAuthStatus();
-          await refreshAllData();
-          appendTerminalLine("AUTH", `Signed in successfully as ${email}`, "success");
-        } else {
-          if (pageFeedback) {
-            pageFeedback.style.display = "block";
-            pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
-            pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
-            pageFeedback.style.color = "#fca5a5";
-            pageFeedback.textContent = data.detail || "Authentication failed. Please verify credentials.";
-          }
-        }
-      } catch (err) {
-        if (pageFeedback) {
-          pageFeedback.style.display = "block";
-          pageFeedback.style.background = "rgba(239, 68, 68, 0.15)";
-          pageFeedback.style.border = "1px solid rgba(239, 68, 68, 0.35)";
-          pageFeedback.style.color = "#fca5a5";
-          pageFeedback.textContent = err.message;
-        }
-      } finally {
-        btnPageSubmit.disabled = false;
-        btnPageSubmit.textContent = isRegisterMode ? "Create Account" : "Sign In";
-      }
-    });
-  }
-
-  // Logout from Dedicated Page
-  if (btnPageLogout) {
-    btnPageLogout.addEventListener("click", async () => {
-      localStorage.removeItem("jobhunter_token");
-      await checkAuthStatus();
-      await refreshAllData();
-      appendTerminalLine("AUTH", "You have signed out.", "info");
-    });
-  }
-
-  // Header button directly opens dedicated Account tab
-  if (btnOpenModal) {
-    btnOpenModal.addEventListener("click", () => {
-      window.switchTab("tab-auth");
-    });
-  }
-
-  if (btnCloseModal && modalOverlay) {
-    btnCloseModal.addEventListener("click", () => {
-      modalOverlay.style.display = "none";
-    });
-    modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) modalOverlay.style.display = "none";
-    });
-  }
-
-  if (btnLogout) {
-    btnLogout.addEventListener("click", async () => {
-      localStorage.removeItem("jobhunter_token");
-      await checkAuthStatus();
-      await refreshAllData();
-      appendTerminalLine("AUTH", "You have signed out.", "info");
-    });
-  }
-}
-
 // Theme Toggle Engine (White & Blue Light/Dark Mode)
 window.initTheme = function() {
   const saved = localStorage.getItem("ai_job_hunter_theme") || "light";
@@ -422,8 +170,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupKeyboardShortcuts();
   setupWebSocket();
-  setupAuthUI();
-  checkAuthStatus();
   setupEventListeners();
   if (window.setMasterView) window.setMasterView("cards");
   refreshAllData();
@@ -448,8 +194,7 @@ window.switchTab = function(tabId) {
     "tab-terminal": "Live Agent Telemetry Stream",
     "tab-crawlers": "ATS Crawlers Ingestion Hub",
     "tab-profile": "Candidate Background Profile",
-    "tab-settings": "Inference Engine & Candidate Mobility",
-    "tab-auth": "User Account & Authentication"
+    "tab-settings": "Inference Engine & Candidate Mobility"
   };
   const hl = document.getElementById("page-headline");
   if (hl && titleMap[tabId]) hl.textContent = titleMap[tabId];
@@ -458,8 +203,7 @@ window.switchTab = function(tabId) {
   const mobMap = {
     "tab-radar": "mob-nav-radar",
     "tab-kanban": "mob-nav-kanban",
-    "tab-profile": "mob-nav-profile",
-    "tab-auth": "mob-nav-auth"
+    "tab-profile": "mob-nav-profile"
   };
   document.querySelectorAll(".mobile-bottom-item").forEach(b => b.classList.remove("active"));
   const activeMob = document.getElementById(mobMap[tabId]);
