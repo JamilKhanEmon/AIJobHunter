@@ -1,541 +1,317 @@
-# ⚡ AI Job Hunter - Autonomous Multi-Agent Career Platform
+# ⚡ AI Job Hunter: Autonomous Multi-Agent Career & Job Application Platform
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0%2B-red.svg?style=flat-square)](https://www.sqlalchemy.org)
-[![Career Intelligence](https://img.shields.io/badge/Career%20Intelligence-Ghost%20Radar%20%7C%20Liveness%20Probe-emerald.svg?style=flat-square)](#)
-[![LLM Router](https://img.shields.io/badge/AI%20Engine-Ollama%20%7C%20Groq%20%7C%20OpenAI%20%7C%20DeepSeek-purple.svg?style=flat-square)](https://ollama.ai)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/JamilKhanEmon/AIJobHunter?style=for-the-badge&logo=github&color=gold)](https://github.com/JamilKhanEmon/AIJobHunter/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/JamilKhanEmon/AIJobHunter?style=for-the-badge&logo=github&color=blue)](https://github.com/JamilKhanEmon/AIJobHunter/network/members)
+[![Python Version](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0%2B-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Official%20Server-8A2BE2?style=for-the-badge&logo=anthropic&logoColor=white)](https://modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-**AI Job Hunter** is an enterprise-grade, end-to-end career intelligence and matching platform. Directly ingesting openings straight from company ATS career portals (Greenhouse, Lever, Ashby, Workday, LinkedIn), it evaluates jobs with multi-agent LLM reasoning (ATS Fit Scoring, STAR alignment, dealbreaker filtering), flags deceptive postings with a **Ghost Job & Evergreen Radar**, probes posting URL vitality in real-time, generates bespoke cover letters, and empowers applicants to apply directly on verified employer portals with structured stage tracking.
-
----
-
-## 🎯 Why This Project Was Built (The Problem & Solution)
-
-### 🚨 The Problem in Modern Tech Job Hunting
-1. **Fragmented Ecosystem**: Top tech companies do not post exclusively to generic boards. The freshest, most authentic openings exist directly on company-hosted ATS portals (Greenhouse, Lever, Ashby, Workday).
-2. **Ghost Jobs & Perpetual Evergreen Pipelines**: Up to 30% of online listings are "ghost jobs"—openings that companies keep open perpetually to build candidate pools without intent to hire.
-3. **The ATS "Black Box" Barrier**: 75%+ of applicants are automatically rejected by ATS parsing algorithms before a human recruiter ever sees them. Generic resumes fail keyword and qualification alignment.
-4. **Dealbreaker Traps & Expired Dead Links**: Applicants frequently invest time applying to roles only to find out the link has expired (404/filled) or fail unadvertised location and visa sponsorship rules.
-5. **The Bot Auto-Apply Trap**: Spamming hundreds of low-quality automated applications using headless browser bots triggers anti-bot bans (Cloudflare/DataDome), damages candidate reputation, and results in instant recruiter blacklisting.
-
-### 💡 The JobHunter AI Solution
-* **Direct-from-Source Live Job Ingestion**: Connects to ATS REST APIs and public candidate feeds to ingest live job postings directly from employer careers pages.
-* **Ghost Job & Evergreen Reality Radar**: Features a deterministic classifier that flags perpetual talent pools ("always hiring", "talent community") and stale churn.
-* **Link Vitality & Liveness Verifier**: Probes career portals via lightweight HTTP checks to instantly detect filled roles, closed requisitions, and 404 dead links.
-* **Pre-Screening Dealbreaker Engine**: Eliminates non-viable jobs immediately based on candidate visa requirements, citizenship, location policies, or experience thresholds.
-* **Intelligent ATS Match Scoring (0–100%)**: Evaluates candidate fit using LLMs (Ollama, Groq, DeepSeek, OpenAI) using the STAR (Situation-Task-Action-Result) framework.
-* **Tailored Document Generation**: Synthesizes custom cover letters and resume highlight bullets mapped directly to the specific job requirements.
-* **Direct Portal Application & Stage Tracking**: Replaces risky automated bot submissions with 1-click direct navigation to verified company portals, combined with structured application status tracking (Saved, Applied, Interviewing, Offer, Rejected).
+> **The next-generation open-source AI platform that discovers, evaluates, and applies to authentic tech jobs directly from employer Applicant Tracking Systems (Greenhouse, Lever, Ashby, Workday, LinkedIn, Bdjobs). Features local & cloud multi-agent LLM reasoning, STAR behavioral alignment, an anti-evergreen Ghost Job Radar, real-time HTTP link vitality probing, bespoke cover letter synthesis, and an official Model Context Protocol (MCP) server for Claude Desktop & Cursor.**
 
 ---
 
 ## 📑 Table of Contents
 
+- [🌟 Key Highlights & Differentiators](#-key-highlights--differentiators)
+- [🎯 The Problem vs. The AI Job Hunter Solution](#-the-problem-vs-the-ai-job-hunter-solution)
 - [🏛️ System Architecture](#️-system-architecture)
-- [🔄 End-to-End Workflow Diagram](#-end-to-end-workflow-diagram)
-- [📂 Project Structure](#-project-structure)
-- [🧩 Core Subsystems & Components](#-core-subsystems--components)
-  - [1. Web Scrapers & ATS Discovery Engine](#1-web-scrapers--ats-discovery-engine)
-  - [2. Multi-Agent AI & LLM Routing Engine](#2-multi-agent-ai--llm-routing-engine)
-  - [3. Job Verification & Reality Radar Layer](#3-job-verification--reality-radar-layer)
-  - [4. Backend API & Real-time WebSockets](#4-backend-api--real-time-websockets)
-  - [5. Glassmorphism Web Radar & Dashboard](#5-glassmorphism-web-radar--dashboard)
-  - [6. Relational Persistence Layer](#6-relational-persistence-layer)
-- [⚙️ Setup & Installation (A to Z)](#️-setup--installation-a-to-z)
-- [🖥️ Usage & CLI Reference](#️-usage--cli-reference)
-- [🧠 LLM Inference Options & Providers](#-llm-inference-options--providers)
-- [🐳 Docker Deployment](#-docker-deployment)
-- [🔒 Privacy, Security & Anti-Bot Safeguards](#-privacy-security--anti-bot-safeguards)
+- [🔄 End-to-End Autonomous Workflow](#-end-to-end-autonomous-workflow)
+- [🧩 Deep-Dive: Core Subsystems & Components](#-deep-dive-core-subsystems--components)
+  - [1. Direct ATS Ingestion & Autonomous Web Discovery](#1-direct-ats-ingestion--autonomous-web-discovery)
+  - [2. Ghost Job & Evergreen Reality Radar](#2-ghost-job--evergreen-reality-radar)
+  - [3. Real-Time Link Vitality & Liveness Verifier](#3-real-time-link-vitality--liveness-verifier)
+  - [4. Multi-Agent AI & LLM Routing Engine](#4-multi-agent-ai--llm-routing-engine)
+  - [5. Candidate Profile & Smart Resume Parser](#5-candidate-profile--smart-resume-parser)
+  - [6. Anti-Bot Browser Automation & Dry-Run Submitter](#6-anti-bot-browser-automation--dry-run-submitter)
+  - [7. Glassmorphic Web Radar & Dashboard](#7-glassmorphic-web-radar--dashboard)
+  - [8. Relational Multi-User Persistence Layer](#8-relational-multi-user-persistence-layer)
+- [🤖 Model Context Protocol (MCP) Server](#-model-context-protocol-mcp-server)
+  - [Available MCP Tools](#available-mcp-tools)
+  - [Setup with Claude Desktop & Cursor](#setup-with-claude-desktop--cursor)
+- [📂 Comprehensive Project Directory Structure](#-comprehensive-project-directory-structure)
+- [⚙️ Step-by-Step Installation & Setup (A to Z)](#️-step-by-step-installation--setup-a-to-z)
+  - [Prerequisites](#prerequisites)
+  - [Installation Steps](#installation-steps)
+  - [Configuration (`config.yaml`, `secrets.yaml`, `profile_resume.yaml`)](#configuration)
+- [🖥️ CLI & Operations Reference](#️-cli--operations-reference)
+- [🧠 Supported LLM Providers & Inference Options](#-supported-llm-providers--inference-options)
+- [🐳 Docker & Containerized Deployment](#-docker--containerized-deployment)
+- [🔒 Security, Data Privacy & Anti-Spam Ethics](#-security-data-privacy--anti-spam-ethics)
+- [🤝 Contributing & Community](#-contributing--community)
+- [📄 License](#-license)
+
+---
+
+## 🌟 Key Highlights & Differentiators
+
+| Capability | What It Does | Why It Matters |
+| :--- | :--- | :--- |
+| **Direct ATS Crawlers** | Ingests from Greenhouse, Lever, Ashby, Workday, LinkedIn & Bdjobs without brittle HTML scrapers | Zero DOM breakages; catches fresh postings within minutes of publishing |
+| **Ghost Job Radar** | Analyzes posting text, perpetual hiring indicators, repost age, and stale keywords | Saves applicants from wasting hours on fake listings or perpetual talent pools |
+| **Link Vitality Prober** | Probes employer HTTP response codes, redirects, and closed job banners | Automatically flags expired requisitions and dead 404 links |
+| **Deterministic Dealbreaker Check** | Filters visa requirements, relocation rules, remote eligibility, and blacklist titles | Rejects 100% of non-viable jobs before consuming any LLM compute |
+| **STAR Framework Scoring** | Mathematical 0–100% ATS score using Situation, Task, Action, Result matching | Provides objective, actionable reasons for match fit |
+| **Bespoke Cover Letter Studio** | Generates authentic 3-paragraph tailored cover letters mapped to candidate projects | High-conversion outreach without sounding like generic AI spam |
+| **Safe Dry-Run Submitter** | Fills forms with human typing cadence and stops right before the submit button | Captures full-page screenshots to inspect entries before live submission |
+| **Official MCP Server** | Exposes 11 native MCP tools over standard I/O (stdio) | Converse directly with your job pipeline inside Claude Desktop, Cursor, or Antigravity |
+| **100% Private & Local Inference** | Runs completely offline with Ollama (Llama 3.3, DeepSeek-R1, Mistral) or ultra-fast Groq LPU | Candidate resume and personal details never leave your machine |
+
+---
+
+## 🎯 The Problem vs. The AI Job Hunter Solution
+
+```
+┌─────────────────────────────────────────────────┐   ┌─────────────────────────────────────────────────┐
+│        TRADITIONAL JOB HUNTING PROBLEMS         │   │            AI JOB HUNTER SOLUTION               │
+├─────────────────────────────────────────────────┤   ├─────────────────────────────────────────────────┤
+│ ❌ 75%+ applications blocked by ATS black-box   │──▶│ ✅ 0-100% ATS STAR scoring highlights exact fit │
+│ ❌ 30% postings are "Ghost Jobs" / Evergreen    │──▶│ ✅ Built-in Ghost Radar flags perpetual pools   │
+│ ❌ Applying to dead/expired requisition links   │──▶│ ✅ HTTP Liveness Prober verifies active careers │
+│ ❌ Generic resumes fail keyword filters         │──▶│ ✅ Bespoke Cover Letters & Tailored Highlights  │
+│ ❌ Headless spam bots cause IP & recruiter bans │──▶│ ✅ Anti-Bot Stealth Chrome & Safe Dry-Run Mode  │
+│ ❌ Scattered spreadsheets and lost follow-ups   │──▶│ ✅ Integrated Kanban & Real-time WebSockets UI  │
+└─────────────────────────────────────────────────┘   └─────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🏛️ System Architecture
 
+AI Job Hunter is engineered as a modular, loosely coupled multi-tier architecture powered by **FastAPI**, **SQLAlchemy ORM**, **Multi-Agent LLM Orchestrators**, **Stealth Chrome CDP Drivers**, and a **Reactive Glassmorphic Web Dashboard**:
+
 ```mermaid
 flowchart TB
-    subgraph UI ["🌐 Frontend Layer (HTML5 / Vanilla CSS / ES6 JavaScript)"]
-        Dashboard["Glassmorphic Radar Dashboard"]
-        LiveLogs["WebSocket Live Telemetry Stream"]
-        ProfileEditor["Visual Candidate Profile & YAML Editor"]
-        GhostRadarUI["Ghost Job & Authenticity Gauges"]
+    subgraph ClientLayer ["🌐 User & Agent Interfaces"]
+        WebUI["Modern Web Dashboard (Glassmorphic UI / Kanban)"]
+        LiveConsole["Real-time WebSocket Telemetry Terminal"]
+        ClaudeDesktop["Claude Desktop / Cursor (via MCP stdio)"]
+        CLITool["Unified CLI Launcher (main.py)"]
     end
 
-    subgraph API ["⚙️ Backend Layer (FastAPI & Uvicorn)"]
-        Router["REST API Router (/api/jobs, /api/crawlers, /api/eval, /api/applications)"]
-        WSManager["WebSocket Connection Hub"]
-        AutoPilotSvc["AutoPilot Orchestration Service"]
+    subgraph APILayer ["⚡ Backend Engine (FastAPI & Uvicorn)"]
+        AuthModule["JWT & Password Security (bcrypt/pbkdf2)"]
+        RestRouter["REST API Hub (/api/jobs, /api/eval, /api/profile)"]
+        WSHub["WebSocket Event Broadcast Bus"]
+        AutoPilotWorker["AutoPilot Pipeline Orchestrator"]
     end
 
-    subgraph DataSources ["🕷️ ATS Scrapers & Feeds"]
-        GH["Greenhouse JSON API"]
+    subgraph DataIngestion ["🕷️ ATS Scrapers & Live Ingestion"]
+        GH["Greenhouse REST API"]
         LEV["Lever Postings API"]
-        ASH["Ashby HQ Board API"]
+        ASH["Ashby GraphQL/REST"]
         WD["Workday CXS Crawler"]
-        LI["LinkedIn Public Search"]
+        LI["LinkedIn Guest Feed"]
+        BD["Bdjobs Regional Gateway"]
+        AutoDiscovery["Autonomous Web Crawler"]
     end
 
-    subgraph AI ["🤖 Multi-Agent AI Engine"]
-        LLMRouter["Unified LLM Router (Groq / Ollama / DeepSeek / OpenAI)"]
-        ATSEval["ATS Evaluator (Dealbreaker + 0-100% Fit Score)"]
-        STARMatch["STAR Behavioral Experience Matcher"]
-        CoverGen["Tailored Resume & Cover Letter Generator"]
-    end
-
-    subgraph Intelligence ["🛡️ Job Verification & Tracking Layer"]
+    subgraph IntelligenceLayer ["🤖 Multi-Agent AI & Verification Engine"]
+        LLMRouter["Unified LLM Router (Ollama / Groq / OpenAI / DeepSeek / Gemini)"]
+        ATSEvaluator["ATS Match Engine (0-100% Score + Dealbreakers)"]
         GhostRadar["Ghost Job & Evergreen Reality Radar"]
-        LivenessProbe["Real-time HTTP Link Vitality Prober"]
-        PortalNavigator["Direct Employer Career Portal Navigator"]
-        LifecycleTracker["Application Stage & Follow-Up Tracker"]
+        LivenessProber["HTTP Link Vitality & Banner Prober"]
+        DocTailorer["Tailored Resume & Cover Letter Generator"]
+        FormAgent["Contextual Application Q&A Generator"]
     end
 
-    subgraph DB ["🗄️ Database Layer"]
-        SQLAlchemy["SQLAlchemy ORM Engine"]
-        SQLite[("SQLite / PostgreSQL Database")]
+    subgraph AutomationLayer ["🦾 Stealth Automation & Delivery"]
+        StealthCDP["Chrome DevTools Anti-Detection Patch"]
+        FormFiller["Humanized Typing Cadence & File Upload"]
+        DryRunEngine["Verification Screenshot & Audit Logger"]
     end
 
-    UI <-->|HTTP REST & WebSockets| API
-    DataSources -->|Extracted Raw Postings| API
-    API -->|Persist Job Records| SQLAlchemy
-    SQLAlchemy --> SQLite
-    API <-->|Evaluate Job Fit| AI
-    API <-->|Analyze Signals & Liveness| Intelligence
-    Intelligence -->|Track Application Lifecycle| SQLAlchemy
-    Intelligence -.->|Telemetry Events| WSManager
-    WSManager -.->|Push Real-time Log Stream| LiveLogs
+    subgraph StorageLayer ["🗄️ Persistence Layer"]
+        ORM["SQLAlchemy 2.0 ORM"]
+        DB[("SQLite (Default) / PostgreSQL")]
+    end
+
+    ClientLayer <-->|REST / WebSockets / MCP| APILayer
+    APILayer --> DataIngestion
+    APILayer --> IntelligenceLayer
+    APILayer --> AutomationLayer
+    APILayer --> StorageLayer
+    IntelligenceLayer <--> StorageLayer
+    AutomationLayer --> StorageLayer
 ```
 
 ---
 
-## 🔄 End-to-End Workflow Diagram
+## 🔄 End-to-End Autonomous Workflow
 
-The autonomous AutoPilot cycle operates as a deterministic multi-stage state machine:
+When the system runs on **AutoPilot**, it executes an autonomous 7-step pipeline:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User / AutoPilot
-    participant Crawlers as ATS Crawlers
-    participant DB as SQLite / PostgreSQL
-    participant AI as AI Engine (LLM)
+    actor User as Developer / Job Seeker
+    participant Pipeline as AutoPilot Orchestrator
+    participant Scrapers as ATS Ingestion Engine
+    participant DB as Relational Database
+    participant Radar as Ghost Radar & Liveness
+    participant AI as Multi-Agent LLM Engine
     participant Bot as Stealth Browser Bot
     participant UI as WebSocket Dashboard
 
-    User->>Crawlers: Trigger Crawl (Greenhouse, Lever, Ashby, LinkedIn)
-    Crawlers->>Crawlers: Fetch job listings & deduplicate URLs
-    Crawlers->>DB: Store raw jobs (status: PENDING_EVAL)
-    Crawlers-->>UI: Stream: "Crawled N new jobs"
+    User->>Pipeline: Trigger AutoPilot (Web UI, CLI, or MCP)
+    Pipeline->>Scrapers: Ingest Jobs from Target ATS Boards
+    Scrapers->>Scrapers: Deduplicate URLs & Sanitize HTML Content
+    Scrapers->>DB: Store Raw Job Postings (Status: PENDING_EVAL)
+    Scrapers-->>UI: Broadcast "Ingested N new authentic postings"
 
-    User->>AI: Trigger Batch Evaluation
-    DB->>AI: Fetch un-evaluated jobs
-    AI->>AI: Check Dealbreakers (Location, Remote, Visa)
+    Pipeline->>Radar: Run Liveness Probe & Ghost Radar
+    Radar->>Radar: Check HTTP 200/404 & Evergreen Talent Community Indicators
+    Radar->>DB: Attach Authenticity Metrics & Vitality Status
+
+    Pipeline->>AI: Evaluate Candidates against Active Profile
+    AI->>AI: Pass 1: Strict Dealbreaker Filter (Location, Visa, Blacklists)
     alt Fails Dealbreaker
-        AI->>DB: Score: 0%, Decision: PASS
+        AI->>DB: Score: 0%, Verdict: PASS (Reason: Ineligible Location/Visa)
     else Passes Dealbreaker
-        AI->>AI: Calculate Tech Stack & Seniority Match
-        AI->>AI: Generate STAR summary & tailored cover letter
-        AI->>DB: Save Evaluation (Score: 0-100%, Decision: APPLY/REVIEW)
+        AI->>AI: Pass 2: Semantic Tech Stack Match + STAR Analysis
+        AI->>DB: Save Match Score (0-100%), Pros, Cons & Verdict
+        alt Score >= 80% (Auto-Apply Eligible)
+            AI->>AI: Synthesize Tailored 3-Paragraph Cover Letter
+            AI->>DB: Store Bespoke Cover Letter
+        end
     end
-    AI-->>UI: Stream: "Evaluated Job #ID -> Score: 88%"
+    AI-->>UI: Broadcast "Job Evaluated -> Score: 92% (APPLY)"
 
-    User->>Bot: Execute Apply (Target: Job #ID, Mode: Dry-Run / Live)
-    Bot->>Bot: Launch Chrome with Stealth CDP Patches
-    Bot->>Bot: Navigate to career portal & detect ATS layout
-    Bot->>Bot: Humanized typing: Name, Email, Phone, Links
-    Bot->>AI: Query AnswerAgent for custom questions
-    AI-->>Bot: Context-aware response from candidate profile
-    Bot->>Bot: Attach resume (data/resume.pdf or fallback)
-    alt Dry-Run Mode
-        Bot->>Bot: Stop before final submit button
-        Bot->>DB: Save Screenshot & Logs (Status: DRY_RUN_VERIFIED)
-        Bot-->>UI: Stream: "Dry-run successful! Screenshot captured."
-    else Live Submission Mode
-        Bot->>Bot: Click Submit Button & confirm confirmation page
-        Bot->>DB: Record Application timestamp (Status: SUBMITTED)
-        Bot-->>UI: Stream: "Application submitted successfully!"
+    opt Browser Automation (Dry-Run / Live)
+        Pipeline->>Bot: Launch Chrome with Stealth Fingerprint Spoofing
+        Bot->>Bot: Navigate to Portal, Fill Form, Upload Resume
+        Bot->>DB: Save Verification Screenshot in data/screenshots/
+        Bot-->>UI: Broadcast "Application Dry-Run Verified!"
     end
 ```
 
 ---
 
-## 📂 Project Structure
+## 🧩 Deep-Dive: Core Subsystems & Components
 
-```text
-job-hunter-ai/
-│
-├── frontend/                          # Glassmorphic Web Dashboard
-│   ├── index.html                     # Live radar, analytics, mission control & logs UI
-│   ├── css/style.css                  # Custom dark-theme design system and micro-animations
-│   └── js/app.js                      # Reactive dashboard controller & WebSocket client
-│
-├── backend/                           # FastAPI Backend Services
-│   ├── app.py                         # Application entry point, CORS, static routes
-│   ├── websocket.py                   # WebSocket connection manager & broadcast bus
-│   ├── routes/                        # REST API endpoints
-│   │   ├── jobs.py                    # Job queries, filtering, and manual mutations
-│   │   ├── crawlers.py                # Crawler trigger and status endpoints
-│   │   ├── evaluation.py              # LLM evaluation batch runners
-│   │   ├── automation.py              # Application bot executor and dry-run endpoints
-│   │   └── settings.py                # Visual configuration & profile editor endpoints
-│   └── services/
-│       └── autopilot.py               # Unified end-to-end AutoPilot runner
-│
-├── ai_engine/                         # Multi-Agent Intelligence Layer
-│   ├── llm_router.py                  # Unified client (Ollama, Groq, DeepSeek, OpenAI)
-│   ├── ats_evaluator.py               # ATS match scoring (0-100%), dealbreaker filter
-│   ├── form_answer_agent.py           # Multi-step screening question answer generator
-│   ├── resume_tailorer.py             # Tailored cover letter & bullet generator
-│   ├── resume_parser.py               # PDF and raw text resume extractor
-│   └── prompts.py                     # Optimized system prompts & evaluation templates
-│
-├── scrapers/                          # Direct ATS Crawlers
-│   ├── greenhouse_crawler.py          # Greenhouse JSON API crawler (Stripe, Figma, etc.)
-│   ├── lever_crawler.py               # Lever Postings API crawler (Spotify, Netflix, etc.)
-│   ├── ashby_crawler.py               # Ashby HQ API crawler (OpenAI, Cursor, etc.)
-│   ├── workday_crawler.py             # Workday CXS crawler
-│   ├── linkedin_scraper.py            # LinkedIn public search and job extractor
-│   └── ats_detector.py                # Automatic ATS engine detector for URLs
-│
-├── automation/                        # Anti-Bot Browser Automation
-│   ├── browser_manager.py             # Undetected Chrome WebDriver manager
-│   ├── stealth_patch.py               # CDP anti-detection hooks & fingerprint evasion
-│   ├── form_filler.py                 # Humanized typing cadence and element interactor
-│   ├── universal_ats_applier.py       # Universal multi-ATS form filler
-│   ├── linkedin_easy_applier.py       # Multi-step LinkedIn modal applier
-│   └── application_logger.py          # Execution trace recorder & screenshot saver
-│
-├── database/                          # Persistence & ORM
-│   ├── connection.py                  # SQLAlchemy engine & session maker
-│   ├── models.py                      # Relational models (Job, JobEvaluation, Application)
-│   └── repository.py                  # CRUD repository operations
-│
-├── config/                            # Configuration & Candidate Profile
-│   ├── config.yaml                    # System parameters, search terms, and crawler targets
-│   ├── secrets.yaml                   # API keys & credentials (GitIgnored)
-│   ├── secrets.yaml.example           # Example configuration template
-│   ├── profile_resume.yaml            # Candidate experience, skills, and pre-answered Q&A
-│   ├── settings.py                    # Pydantic configuration loader
-│   └── logger.py                      # Centralized logging formatters
-│
-├── scripts/                           # Standalone CLI Utilities
-│   ├── seed_demo_data.py              # Seeds database with realistic sample tech jobs
-│   ├── run_crawler.py                 # Standalone crawler CLI
-│   ├── run_evaluation.py              # Standalone batch evaluation CLI
-│   └── run_apply.py                   # Standalone browser automation executor
-│
-├── data/                              # Local Runtime Storage (GitIgnored)
-│   ├── job_hunter.db                  # Local SQLite database
-│   ├── screenshots/                   # Verification screenshots from browser runs
-│   └── chrome_profile/                # Persistent browser session profile
-│
-├── docker/                            # Production container setup
-├── docker-compose.yml                 # Multi-container orchestration (App + PostgreSQL)
-├── main.py                            # Unified CLI & server launcher
-└── requirements.txt                   # Production Python dependencies
-```
+### 1. Direct ATS Ingestion & Autonomous Web Discovery
+Rather than relying on fragile HTML parsing that breaks whenever a website updates its layout, **AI Job Hunter** directly queries the structured endpoints exposed by top Applicant Tracking Systems:
+
+* **Greenhouse (`scrapers/greenhouse_crawler.py`)**: Interacts with `https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true`. Downloads structured JSON with company departments, office locations, salary bands, and clean descriptions.
+* **Lever (`scrapers/lever_crawler.py`)**: Communicates with `https://api.lever.co/v0/postings/{company}?mode=json`. Parses workplace types (`Remote`, `Hybrid`, `Onsite`) and commitment formats.
+* **Ashby HQ (`scrapers/ashby_crawler.py`)**: Interacts with the modern public API used by top AI & tech unicorns (OpenAI, Cursor, Retool, Ramp, Mistral).
+* **Workday CXS (`scrapers/workday_crawler.py`)**: Queries candidate experience services (CXS) search endpoints with pagination.
+* **LinkedIn Public Search (`scrapers/linkedin_scraper.py`)**: Fetches postings via LinkedIn guest feeds (`f_TPR=r86400`) within the last 24 hours **without requiring user credentials** or triggering account security challenges.
+* **Bdjobs Scraper (`scrapers/bdjobs_scraper.py`)**: Gateway crawler for regional engineering and tech roles in Bangladesh.
+* **ATS URL Auto-Detector (`scrapers/ats_detector.py`)**: Accepts any career URL, inspects HTTP redirects, CNAME records, and DOM signatures to route the job to the correct ATS crawler automatically.
+* **Autonomous Discovery (`scrapers/autonomous_discovery.py`)**: Scans known tech ecosystems for fresh openings matching candidate preferences without manual token input.
 
 ---
 
-## 🧩 Core Subsystems & Components
+### 2. Ghost Job & Evergreen Reality Radar
+An estimated 20–30% of tech job listings are "Ghost Jobs"—openings kept posted perpetually to collect resumes or project fake growth without an active hiring requisition.
 
-### 1. Web Scrapers & ATS Discovery Engine (How Jobs Are Found & Collected)
-
-Instead of fragile DOM web scrapers that break whenever a website layout changes, **JobHunter AI** interfaces directly with the native RESTful endpoints and public candidate feeds exposed by modern Applicant Tracking Systems:
-
-```mermaid
-flowchart LR
-    subgraph Targets ["🎯 Target Career Ecosystem"]
-        T1["Greenhouse (boards-api.greenhouse.io)"]
-        T2["Lever (api.lever.co/v0/postings)"]
-        T3["Ashby (api.ashbyhq.com/posting-api)"]
-        T4["Workday (wd1.myworkdayjobs.com/wday/cxs)"]
-        T5["LinkedIn (jobs-guest/search?f_TPR=r86400)"]
-    end
-
-    subgraph Pipeline ["⚡ Ingestion & Sanitization Engine"]
-        Crawler["Crawler Workers"]
-        Detector["ATS URL Auto-Detector"]
-        Dedupe["URL & Hash Deduplication"]
-        HTMLStripper["HTML / Markdown Cleaner"]
-        Norm["Schema Normalization"]
-    end
-
-    subgraph Store ["🗄️ Persistence"]
-        DB[("Jobs Database (Pending Eval)")]
-    end
-
-    Targets --> Crawler
-    Crawler --> Detector
-    Detector --> Dedupe
-    Dedupe --> HTMLStripper
-    HTMLStripper --> Norm
-    Norm --> DB
-```
-
-#### Detailed Ingestion Mechanics:
-* **Greenhouse Crawler (`greenhouse_crawler.py`)**:
-  - Connects to `https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs?content=true`.
-  - Downloads structured JSON containing full HTML descriptions, departments, office locations, and salary bands.
-  - Strips boilerplate HTML tags and decodes character entities into clean, LLM-digestible markdown.
-* **Lever Postings Crawler (`lever_crawler.py`)**:
-  - Calls `https://api.lever.co/v0/postings/{company}?mode=json`.
-  - Automatically identifies workplace type (`Remote`, `Hybrid`, `Onsite`) and employment commitment (`Full-time`, `Contract`).
-* **Ashby HQ Crawler (`ashby_crawler.py`)**:
-  - Interacts with Ashby's public job board GraphQL & REST interfaces used by high-growth AI companies (OpenAI, Cursor, Retool).
-  - Normalizes multi-region compensation tiers and custom location taxonomies.
-* **Workday CXS Crawler (`workday_crawler.py`)**:
-  - Issues paginated POST requests against Workday's Candidate Experience Services (CXS) search endpoints.
-  - Traverses large enterprise catalogs while avoiding session rate limits.
-* **LinkedIn Public Scraper (`linkedin_scraper.py`)**:
-  - Queries LinkedIn's guest job feed: `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={keyword}&location={location}&f_TPR=r86400`.
-  - **No authentication required**: Queries public guest feeds to eliminate account flagging risks.
-  - Filters strictly for postings from the last 24 hours (`f_TPR=r86400`) to ensure first-mover advantage.
-* **Universal ATS Auto-Detector (`ats_detector.py`)**:
-  - Given any arbitrary career URL, it inspects response headers, CNAME redirects, script embeds, and DOM signatures to automatically route the URL to the optimal crawler engine.
+The **Ghost Radar (`scrapers/ghost_detector.py`)** runs heuristic scoring against multiple risk vectors:
+1. **Perpetual Talent Pool Indicators**: Flags keywords like *"talent community"*, *"future opportunities"*, *"evergreen"*, *"general application"*, *"always looking for great talent"*.
+2. **Posting Age & Staleness**: Penalizes postings older than 30–60 days that remain unfilled in fast-paced software sectors.
+3. **Vague Requisition Signatures**: Analyzes absence of concrete team names, specific project milestones, or specific deliverables.
+4. **Authenticity Score (0–100%)**: Visualized in the web dashboard with traffic-light badges (`High Authenticity`, `Moderate`, `Likely Ghost Job`).
 
 ---
 
-### 2. Multi-Agent AI & LLM Routing Engine (How Fit is Evaluated)
-
-Once jobs are collected, they pass through a strict multi-stage reasoning pipeline:
-
-```mermaid
-flowchart TD
-    Job["Raw Job Posting + Candidate Profile"] --> Stage1["Stage 1: Hard Dealbreaker Check"]
-    
-    Stage1 -->|Fails: e.g. Requires Onsite in Berlin without Visa| Rejected["Mark PASS (Score: 0%)"]
-    
-    Stage1 -->|Passes Dealbreaker| Stage2["Stage 2: Technical & Domain Match Analysis"]
-    
-    Stage2 --> Stage3["Stage 3: STAR Behavioral Alignment"]
-    Stage3 --> Stage4["Stage 4: Mathematical Fit Scoring (0-100%)"]
-    
-    Stage4 --> Decision{"Score Threshold"}
-    Decision -->|>= 75%| Apply["Decision: APPLY + Auto-Generate Tailored Cover Letter"]
-    Decision -->|50% - 74%| Review["Decision: REVIEW"]
-    Decision -->|< 50%| Pass["Decision: PASS"]
-```
-
-#### Evaluation Breakdown:
-1. **Stage 1 - Dealbreaker Filter**:
-   - Compares candidate location against job requirements.
-   - Evaluates visa sponsorship requirements against `profile_resume.yaml`.
-   - Prevents wasting compute or time on fundamentally ineligible roles.
-2. **Stage 2 - Technical Fit Matrix**:
-   - Computes semantic similarity between required skills (languages, frameworks, cloud platforms) and candidate skills.
-   - Assesses seniority requirements (years of experience, engineering leadership expectations).
-3. **Stage 3 - STAR Reasoning (Situation, Task, Action, Result)**:
-   - Evaluates whether candidate bullet points demonstrate measurable impact relevant to the job's core challenges.
-4. **Stage 4 - Tailored Document Synthesis**:
-   - For jobs marked **APPLY**, the `ResumeTailorer` agent drafts a tailored, professional cover letter highlighting the exact 2-3 projects that best align with the company's tech stack.
-5. **Stage 5 - Bespoke Form Answer Agent (`form_answer_agent.py`)**:
-   - Parses open-ended application questions (e.g., *"What is your expected compensation?"*, *"Explain your experience with distributed consensus"*).
-   - Generates contextual, consistent responses grounded in the candidate's structured profile.
-
-### 3. Browser Automation & Anti-Bot Evasion Layer
-
-Automating applications on modern web forms requires evading modern bot detection algorithms (Cloudflare Turnstile, DataDome, Akamai):
-
-```mermaid
-graph LR
-    Chrome[Chrome Browser] --> CDP[CDP Runtime Patches]
-    CDP --> Spoof1["Remove window.navigator.webdriver"]
-    CDP --> Spoof2["Emulate Native Hardware Concurrency & Plugins"]
-    CDP --> Spoof3["Inject Realistic Chrome Runtime Object"]
-    Spoof3 --> HumanCadence["Humanized Keystroke Latency (30ms - 120ms)"]
-    HumanCadence --> FormFill["Intelligent Field Detection & Resume Upload"]
-```
-
-* **Safe Dry-Run Submitter**: By default, the bot navigates through all multi-step form pages, uploads the candidate resume, answers all questions, and halts immediately before clicking the final `Submit` button. It captures a full-page verification screenshot in `data/screenshots/` and logs the form state.
-
-### 4. Relational Persistence Layer
-
-The database schema is managed via SQLAlchemy ORM, supporting both SQLite for zero-setup local operation and PostgreSQL for multi-worker containerized deployments.
-
-```mermaid
-erDiagram
-    JOBS ||--o| JOB_EVALUATIONS : "evaluated by"
-    JOBS ||--o{ APPLICATION_RECORDS : "applied via"
-    JOBS ||--o{ AUTOMATION_LOGS : "logs trace"
-
-    JOBS {
-        int id PK
-        string title
-        string company
-        string url UK
-        string source
-        string location
-        boolean remote
-        string ats_type
-        datetime date_posted
-        datetime created_at
-    }
-
-    JOB_EVALUATIONS {
-        int id PK
-        int job_id FK
-        float score
-        string decision
-        text reason
-        text star_analysis
-        text tailored_cover_letter
-        datetime evaluated_at
-    }
-
-    APPLICATION_RECORDS {
-        int id PK
-        int job_id FK
-        string status
-        boolean dry_run
-        string screenshot_path
-        datetime applied_at
-    }
-
-    AUTOMATION_LOGS {
-        int id PK
-        int job_id FK
-        string level
-        string message
-        datetime created_at
-    }
-```
+### 3. Real-Time Link Vitality & Liveness Verifier
+Job links go stale rapidly when applications close. The **Liveness Verifier (`scrapers/liveness_verifier.py`)** executes non-blocking HTTP probes:
+* Detects HTTP status codes (`200 OK`, `404 Not Found`, `410 Gone`, `301/302 Redirect`).
+* Scans response text for closure banners (*"This position has been filled"*, *"No longer accepting applications"*, *"Requisition closed"*).
+* Prevents applicants from spending time reading or preparing documents for obsolete vacancies.
 
 ---
 
-## ⚙️ Setup & Installation (A to Z)
+### 4. Multi-Agent AI & LLM Routing Engine
+Located in `ai_engine/`, this subsystem powers all cognitive reasoning:
 
-### Prerequisites
-- **Python**: Version 3.10, 3.11, or 3.12 installed.
-- **Google Chrome**: Latest stable Chrome browser installed (for automation).
-- **LLM Provider**: Either [Ollama](https://ollama.ai) running locally or a free [Groq Cloud](https://groq.com) API key.
-
-### Step 1: Clone and Navigate to the Repository
-```bash
-git clone <your-repo-url>
-cd job-hunter-ai
-```
-
-### Step 2: Create and Activate a Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### Step 3: Install Required Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4: Configure Secrets & Candidate Profile
-1. Copy the example secrets file:
-   ```bash
-   cp config/secrets.yaml.example config/secrets.yaml
-   ```
-2. Edit `config/secrets.yaml` to specify your preferred AI provider:
-   - For **Groq Cloud (Fast & Free)**: Add your `groq_api_key`.
-   - For **Local Ollama**: Ensure Ollama is running (`ollama run llama3.3`) and set `ollama_host: "http://localhost:11434"`.
-   - For **OpenAI / DeepSeek / Gemini**: Supply your respective API key.
-3. Edit `config/profile_resume.yaml` with your background:
-   - Full name, headline, email, phone number, location.
-   - Core skills, tech stack, work experience bullets, education.
-   - Screening answers (work authorization, notice period, salary targets).
+* **Unified LLM Router (`llm_router.py`)**: Seamless abstraction layer supporting:
+  - **Local Ollama** (Llama 3.3, DeepSeek-R1, Mistral, Qwen 2.5) — 100% private, zero cost.
+  - **Groq Cloud LPU** (`llama-3.3-70b-versatile`, `mixtral-8x7b`) — Sub-second inference, free tier.
+  - **OpenAI Commercial API** (`gpt-4o-mini`, `gpt-4o`, `o3-mini`).
+  - **DeepSeek API** (`deepseek-chat`, `deepseek-reasoner`).
+  - **Anthropic Claude API** (`claude-3-5-sonnet`, `claude-3-5-haiku`).
+  - **Google Gemini API** (`gemini-2.0-flash`, `gemini-1.5-pro`).
+  - **OpenRouter Gateway** (200+ models).
+* **ATS Fit Evaluator (`ats_evaluator.py`)**:
+  - **Pass 1 (Dealbreakers)**: Evaluates visa sponsorship, relocation assistance, citizenship constraints, and blacklisted titles (`Intern`, `Unpaid`, `Volunteer`).
+  - **Pass 2 (STAR Alignment)**: Maps candidate bullet points to required competencies and scores fit from 0 to 100%.
+* **Cover Letter Studio & Resume Tailorer (`resume_tailorer.py`)**: Synthesizes bespoke cover letters adopting chosen personas (Technical, Executive, Creative, Concise).
+* **Form Answer Agent (`form_answer_agent.py`)**: Answers arbitrary recruiter screening questions dynamically from candidate profile facts.
 
 ---
 
-## 🖥️ Usage & CLI Reference
-
-### 1. Launch the Server & Web Dashboard
-```bash
-python3 main.py server
-```
-Navigate to **[http://localhost:8000](http://localhost:8000)** to view the live dashboard.
-
-### 2. Seed Initial Tech Jobs (Demo Data)
-```bash
-python3 main.py seed
-```
-
-### 3. Run ATS Crawlers via CLI
-```bash
-# Crawl Greenhouse (e.g. Figma, Stripe, Anthropic)
-python3 main.py crawl --source greenhouse --target figma
-
-# Crawl Ashby (e.g. Cursor, Retool, OpenAI)
-python3 main.py crawl --source ashby --target cursor
-
-# Crawl Lever (e.g. Spotify, Netflix)
-python3 main.py crawl --source lever --target spotify
-
-# Crawl LinkedIn
-python3 main.py crawl --source linkedin --target "AI Engineer"
-```
-
-### 4. Run AI Evaluation on Unscored Jobs
-```bash
-python3 main.py evaluate
-```
-
-### 5. Execute Browser Automation Bot (Safe Dry-Run Mode)
-```bash
-python3 main.py apply --job-id 1 --dry-run
-```
+### 5. Candidate Profile & Smart Resume Parser
+* **Resume Parser (`ai_engine/resume_parser.py`)**: Parses PDF and raw text resumes using NLP regex and LLM entity extraction to populate structured candidate schemas.
+* **Profile YAML Schema (`config/profile_resume.yaml`)**: Stores personal details, categorized skills (Languages, Frameworks, AI, DevOps), verified project metrics, education, and pre-answered screening questionnaires.
 
 ---
 
-## 🧠 LLM Inference Options & Providers
-
-Select your active provider in `config/config.yaml` under `ai_router`:
-
-| Provider | Model ID | Latency | Cost | Privacy |
-| :--- | :--- | :--- | :--- | :--- |
-| **Groq Cloud (Recommended)** | `llama-3.3-70b-versatile` | ~500 tok/sec | Free Tier | Cloud |
-| **Ollama (Recommended)** | `llama3.3:latest` | ~25 tok/sec | Free / Local | 100% Private (On-Device) |
-| **DeepSeek** | `deepseek-chat` | ~80 tok/sec | Low Cost | Cloud |
-| **OpenAI** | `gpt-4o-mini` / `gpt-4o` | ~90 tok/sec | Pay per token | Cloud |
-| **Offline Heuristic** | Built-in Rule Engine | Instant | $0 | 100% Offline (Zero API calls) |
+### 6. Anti-Bot Browser Automation & Dry-Run Submitter
+Located in `automation/`:
+* **Undetected Chrome Driver (`browser_manager.py`)**: Manages browser sessions with custom user data profiles to preserve cookies and session state.
+* **Stealth CDP Hooks (`stealth_patch.py`)**: Removes `window.navigator.webdriver`, mimics real plugin arrays, emulates native screen resolutions, and injects realistic hardware concurrency values.
+* **Humanized Form Filler (`form_filler.py`)**: Uses variable typing cadence (30ms–120ms per keystroke), smooth scrolling, and human-like field focus.
+* **Safe Dry-Run Submitter**: Halts execution right before the final submission button, capturing a full-page verification screenshot in `data/screenshots/` for manual inspection.
 
 ---
 
-## 🐳 Docker Deployment
+### 7. Glassmorphic Web Radar & Dashboard
+Located in `frontend/`:
+* **Executive Dark & Light Mode**: High-contrast, accessibility-tested theme toggle.
+* **Real-Time Telemetry Terminal**: WebSockets stream live crawler logs, ATS scores, and autopilot events directly into the browser.
+* **Visual Kanban Pipeline**: Drag-and-drop tracking across `Discovered`, `Matched`, `Applied`, `Interviewing`, `Offer`, and `Rejected`.
+* **Cover Letter Studio**: Real-time generation, editing, copying, and downloading of tailored application letters.
+* **Dynamic AI Provider Selector**: One-click provider switching with live connection testing and model discovery.
 
-To run the entire system in isolated containers with PostgreSQL:
+---
 
-```bash
-# Build and launch services in background
-docker compose up -d
+### 8. Relational Multi-User Persistence Layer
+Located in `database/`:
+* **SQLAlchemy 2.0 ORM (`database/models.py`)**: High-performance relational mappings for `User`, `UserProfile`, `Job`, `JobEvaluation`, `ApplicationRecord`, and `AutomationLog`.
+* **Flexible Storage**: SQLite (`data/job_hunter.db`) out-of-the-box for instant zero-dependency local runs, or PostgreSQL for high-concurrency production deployments.
+* **Full Multi-User Isolation**: Supports secure multi-user JWT authentication with strictly separated profiles, search preferences, and API keys.
 
-# Check service logs
-docker compose logs -f app
+---
 
-# Stop containers
-docker compose down
+## 🤖 Model Context Protocol (MCP) Server
+
+AI Job Hunter includes an official **Model Context Protocol (MCP)** server (`mcp_server.py`) that implements standard I/O (stdio) transport, allowing AI desktop applications like **Claude Desktop**, **Cursor**, or **Antigravity** to interface directly with your job hunting pipeline.
+
+```
+┌─────────────────────────┐          JSON-RPC over stdio          ┌─────────────────────────┐
+│     Claude Desktop      │ ◄───────────────────────────────────► │      mcp_server.py      │
+│      Cursor IDE         │                                       │     (JobHunter MCP)     │
+└─────────────────────────┘                                       └────────────┬────────────┘
+                                                                               │ Calls
+                                                                  ┌────────────▼────────────┐
+                                                                  │ AI Job Hunter Backend   │
+                                                                  │ (Jobs, ATS, Cover Docs) │
+                                                                  └─────────────────────────┘
 ```
 
-## 🤖 Model Context Protocol (MCP) Integration
+### Available MCP Tools
 
-JobHunter AI includes an official **Model Context Protocol (MCP)** server (`mcp_server.py`) that connects seamlessly to **Claude Desktop**, **Cursor**, **Antigravity**, or remote chatbots with **zero manual tokens required**.
+| Tool Name | Scope | Capability |
+| :--- | :--- | :--- |
+| `get_my_profile` | Profile | Returns candidate headline, skills, experience, and mobility parameters |
+| `set_my_resume_text` | Profile | Dynamically parses raw CV text into active candidate model |
+| `reset_to_default_profile` | Profile | Resets candidate profile to system defaults |
+| `search_live_jobs` | Search | Ingests real-time jobs from Greenhouse, Lever, Ashby, Workday, or LinkedIn |
+| `autonomous_web_discovery`| Discovery | Scans public ATS domains for keyword opportunities |
+| `match_jobs_with_my_cv` | Scoring | Calculates STAR-aligned 0-100% match scores |
+| `deep_evaluate_job` | Reasoning | Generates pros, cons, recommendations, and executive summaries |
+| `verify_job_authenticity` | Trust | Probes HTTP header liveness and Ghost Job heuristics |
+| `generate_tailored_cover_letter` | Apply | Generates high-conversion 3-paragraph bespoke cover letters |
+| `update_application_stage` | Pipeline | Advances application tracking status (`APPLIED`, `INTERVIEWING`, etc.) |
+| `get_application_pipeline` | Pipeline | Returns full overview of pipeline metrics |
 
-### 🌟 Registered MCP Tools (11 Powerful Capabilities)
+### Setup with Claude Desktop & Cursor
 
-1. **`get_my_profile`**: Returns the active candidate's extracted skills, headline, and summary.
-2. **`set_my_resume_text`**: Allows anyone to paste their CV directly in chat to dynamically recalibrate matching without altering default files.
-3. **`reset_to_default_profile`**: Resets candidate profile back to `profile_resume.yaml`.
-4. **`search_live_jobs`**: Scrapes live postings from official Greenhouse, Lever, Ashby, Workday, or LinkedIn endpoints.
-5. **`autonomous_web_discovery`**: Auto-discovers remote and sponsored jobs across global networks without specifying company tokens.
-6. **`match_jobs_with_my_cv`**: Computes deterministic 0–100% ATS fit against candidate CV and highlights matched & missing skills.
-7. **`deep_evaluate_job`**: Runs multi-agent LLM reasoning (STAR alignment, dealbreakers, pros, cons, verdict).
-8. **`verify_job_authenticity`**: Probes HTTP link vitality and evaluates Ghost Job / Evergreen markers.
-9. **`generate_tailored_cover_letter`**: Synthesizes a bespoke 3-paragraph cover letter mapped to candidate's projects.
-10. **`update_application_stage`**: Updates application tracking stage (`SAVED`, `APPLIED`, `INTERVIEWING`, `OFFER`, `REJECTED`).
-11. **`get_application_pipeline`**: Retrieves complete breakdown of all applications in progress.
-
-### 🔌 Connecting to Claude Desktop / Cursor in 30 Seconds
-
-Copy the contents of `claude_desktop_config.json` to your Claude Desktop configuration file:
-
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+Add the following snippet to your Claude Desktop configuration file:
+* **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+* **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -553,20 +329,253 @@ Copy the contents of `claude_desktop_config.json` to your Claude Desktop configu
 }
 ```
 
-Restart Claude Desktop, and you can immediately converse with your Job Hunter using natural language:
-> *"Show me remote Python jobs at Stripe with 80%+ ATS score and draft a tailored cover letter for the best match."*
+Once configured, simply ask Claude in natural language:
+> *"Show me remote Python openings at Stripe with an 80%+ ATS match score and synthesize a tailored cover letter for the best match."*
 
 ---
 
-## 🔒 Privacy, Security & Anti-Bot Safeguards
+## 📂 Comprehensive Project Directory Structure
 
-1. **Local Secrets Isolation**: `config/secrets.yaml` is excluded via `.gitignore` and never committed.
-2. **Safe Dry-Run Verification**: The automation engine defaults to dry-run mode, stopping before any final submission button and capturing a full screenshot for human inspection.
-3. **No Credential Logging**: All sensitive user credentials and tokens are masked in output logs and WebSocket streams.
-4. **Humanized Rate Limiting**: Scrapers and automation workers introduce randomized jitter delays to conform to responsible web citizenship.
+```text
+AIJobHunter/
+│
+├── frontend/                          # Glassmorphic Web Dashboard
+│   ├── index.html                     # Live radar, analytics, mission control & logs UI
+│   ├── css/
+│   │   └── style.css                  # Modern responsive design system, animations & themes
+│   └── js/
+│       └── app.js                     # Reactive frontend controller & WebSocket telemetry client
+│
+├── backend/                           # FastAPI Backend Services
+│   ├── __init__.py
+│   ├── app.py                         # Application entry point, CORS, static routes
+│   ├── auth.py                        # JWT authentication & password hashing (bcrypt/pbkdf2)
+│   ├── websocket.py                   # WebSocket connection manager & broadcast bus
+│   ├── routes/                        # Modular REST API endpoints
+│   │   ├── applications.py            # Application tracking, liveness probing & ghost radar
+│   │   ├── auth.py                    # User registration, login & profile resolution
+│   │   ├── crawlers.py                # Crawler trigger, target lists & discovery endpoints
+│   │   ├── evaluation.py              # LLM evaluation batch runners & cover letter studio
+│   │   ├── jobs.py                    # Job queries, filtering, search, and manual mutations
+│   │   ├── mcp.py                     # MCP server status & configuration inspection
+│   │   ├── pipeline.py                # AutoPilot triggers, instant runs, pruning & resets
+│   │   ├── profile.py                 # Candidate profile editor, AI settings & model discovery
+│   │   └── stats.py                   # System-wide metrics & dashboard analytics
+│   └── services/
+│       └── autopilot.py               # Unified end-to-end AutoPilot runner
+│
+├── ai_engine/                         # Multi-Agent Intelligence Layer
+│   ├── __init__.py
+│   ├── ats_evaluator.py               # ATS match scoring (0-100%), dealbreaker filter
+│   ├── cv_matcher.py                  # Semantic technical keyword match engine
+│   ├── form_answer_agent.py           # Multi-step screening question answer generator
+│   ├── llm_router.py                  # Unified client (Ollama, Groq, DeepSeek, OpenAI, etc.)
+│   ├── prompts.py                     # Optimized system prompts & evaluation templates
+│   ├── resume_parser.py               # PDF and raw text resume extractor
+│   └── resume_tailorer.py             # Tailored cover letter & bullet generator
+│
+├── scrapers/                          # Direct ATS Crawlers & Verification
+│   ├── __init__.py
+│   ├── ashby_crawler.py               # Ashby HQ API crawler (OpenAI, Cursor, etc.)
+│   ├── ats_detector.py                # Automatic ATS engine detector for arbitrary URLs
+│   ├── autonomous_discovery.py        # Automated keyword discovery across company boards
+│   ├── base_scraper.py                # Abstract base class & normalized data models
+│   ├── bdjobs_scraper.py              # Gateway crawler for Bdjobs.com listings
+│   ├── ghost_detector.py              # Ghost job & evergreen talent pool heuristics
+│   ├── greenhouse_crawler.py          # Greenhouse JSON API crawler (Stripe, Figma, etc.)
+│   ├── lever_crawler.py               # Lever Postings API crawler (Spotify, Netflix, etc.)
+│   ├── linkedin_scraper.py            # LinkedIn guest search extractor (no credentials needed)
+│   ├── liveness_verifier.py           # Real-time HTTP link vitality prober
+│   └── workday_crawler.py             # Workday CXS crawler
+│
+├── automation/                        # Anti-Bot Browser Automation
+│   ├── __init__.py
+│   ├── application_logger.py          # Execution trace recorder & screenshot saver
+│   ├── browser_manager.py             # Undetected Chrome WebDriver manager
+│   ├── form_filler.py                 # Humanized typing cadence and element interactor
+│   ├── linkedin_easy_applier.py       # Multi-step LinkedIn modal applier
+│   ├── stealth_patch.py               # CDP anti-detection hooks & fingerprint evasion
+│   └── universal_ats_applier.py       # Universal multi-ATS form filler
+│
+├── database/                          # Persistence & ORM
+│   ├── __init__.py
+│   ├── connection.py                  # SQLAlchemy engine & session maker (SQLite / Postgres)
+│   ├── models.py                      # Relational models (Job, Evaluation, User, Profile)
+│   └── repository.py                  # CRUD repository operations
+│
+├── config/                            # Configuration & Candidate Profile
+│   ├── config.yaml                    # System parameters, search terms, and crawler targets
+│   ├── logger.py                      # Centralized logging formatters
+│   ├── profile_resume.yaml            # Active candidate experience, skills & Q&A (GitIgnored)
+│   ├── profile_resume.yaml.example    # Example candidate profile template
+│   ├── secrets.yaml                   # Private API keys & credentials (GitIgnored)
+│   ├── secrets.yaml.example           # Example API keys configuration template
+│   └── settings.py                    # Dynamic Pydantic configuration loader
+│
+├── scripts/                           # Standalone CLI Utilities
+│   ├── run_apply.py                   # Standalone browser automation executor
+│   ├── run_crawler.py                 # Standalone crawler CLI
+│   ├── run_evaluation.py              # Standalone batch evaluation CLI
+│   └── seed_demo_data.py              # Seeds database with realistic sample tech jobs
+│
+├── data/                              # Local Runtime Storage (GitIgnored)
+│   ├── .gitkeep                       # Preserves directory in git
+│   ├── job_hunter.db                  # Local SQLite database (Auto-created)
+│   ├── screenshots/                   # Verification screenshots from dry-run applications
+│   └── chrome_profile/                # Persistent browser session profile
+│
+├── docker/                            # Container assets
+│   └── Dockerfile.backend             # Production container definition
+├── docker-compose.yml                 # Multi-container orchestration (App + PostgreSQL + Ollama)
+├── claude_desktop_config.json         # Reference configuration for Claude Desktop
+├── main.py                            # Unified CLI & server launcher
+├── mcp_server.py                      # Official Model Context Protocol stdio server
+├── requirements.txt                   # Production Python dependencies
+└── .gitignore                         # Strict credential and database exclusion rules
+```
+
+---
+
+## ⚙️ Step-by-Step Installation & Setup (A to Z)
+
+### Prerequisites
+* **Python**: Version 3.10, 3.11, or 3.12 installed.
+* **Git**: Installed and configured.
+* **Google Chrome**: Latest stable Chrome browser installed (for automation dry-runs).
+* **LLM Provider (Choose one)**:
+  - *Option A (Free & Local)*: [Ollama](https://ollama.ai) (`ollama run llama3.3` or `ollama run deepseek-r1:8b`).
+  - *Option B (Free & Ultra-Fast Cloud)*: Free API Key from [Groq Console](https://console.groq.com).
+  - *Option C (Commercial Cloud)*: OpenAI, DeepSeek, Anthropic, or Google Gemini API key.
+
+---
+
+### Installation Steps
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/JamilKhanEmon/AIJobHunter.git
+cd AIJobHunter
+```
+
+#### 2. Create and Activate a Virtual Environment
+```bash
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+
+# Windows (PowerShell)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+#### 3. Install Python Dependencies
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### 4. Configure Your Settings & Profile
+Create your local configuration files from the templates:
+```bash
+cp config/secrets.yaml.example config/secrets.yaml
+cp config/profile_resume.yaml.example config/profile_resume.yaml
+```
+
+* **`config/secrets.yaml`**: Add your AI provider API key (e.g. Groq, OpenAI, Gemini) or leave blank if using local Ollama.
+* **`config/profile_resume.yaml`**: Fill in your personal details, tech stack, past achievements, and screening question answers.
+* **`config/config.yaml`**: Adjust target positions (e.g., `Full Stack Engineer`, `AI Engineer`), locations, and ATS target company boards.
+
+---
+
+## 🖥️ CLI & Operations Reference
+
+The project includes a unified CLI executable via `main.py`:
+
+```bash
+# 1. Start the Web Dashboard and API Server
+python3 main.py server
+
+# 2. Seed realistic tech demo jobs (Stripe, Anthropic, OpenAI, Figma, Spotify)
+python3 main.py seed
+
+# 3. Crawl target company job boards directly
+python3 main.py crawl --source greenhouse --target stripe
+python3 main.py crawl --source ashby --target openai
+python3 main.py crawl --source lever --target spotify
+python3 main.py crawl --source linkedin --target "AI Engineer"
+python3 main.py crawl --source bdjobs --target "Python"
+
+# 4. Run AI ATS Evaluations on pending jobs
+python3 main.py evaluate
+
+# 5. Execute Safe Dry-Run Application with Chrome Browser
+python3 main.py apply --job-id 1 --dry-run
+```
+
+---
+
+## 🧠 Supported LLM Providers & Inference Options
+
+You can configure your active provider directly in `config/config.yaml` or toggle it live in the Web Dashboard Settings:
+
+| Provider | Model Identifier | Typical Speed | Est. Cost | Data Privacy |
+| :--- | :--- | :--- | :--- | :--- |
+| **Groq Cloud (Recommended)** | `llama-3.3-70b-versatile` | ~500 tok/sec | Free Tier | Cloud API |
+| **Local Ollama (Recommended)** | `llama3.3:latest` / `deepseek-r1:8b` | ~30 tok/sec | 100% Free | 100% On-Device (Zero Data Sent) |
+| **DeepSeek API** | `deepseek-chat` / `deepseek-reasoner` | ~80 tok/sec | Ultra-Low | Cloud API |
+| **OpenAI Commercial** | `gpt-4o-mini` / `gpt-4o` | ~100 tok/sec | Pay per token | Cloud API |
+| **Google Gemini** | `gemini-2.0-flash` | ~120 tok/sec | Generous Free Tier | Cloud API |
+| **Anthropic Claude** | `claude-3-5-sonnet` | ~80 tok/sec | Pay per token | Cloud API |
+| **OpenRouter** | `openrouter/auto` | Variable | Variable | Multi-Provider Gateway |
+
+---
+
+## 🐳 Docker & Containerized Deployment
+
+Run the complete platform (Backend API + Web Dashboard + PostgreSQL) with a single command:
+
+```bash
+# Build and start services in the background
+docker compose up -d
+
+# Inspect live application logs
+docker compose logs -f app
+
+# Stop all containers
+docker compose down
+```
+
+The Web Dashboard will be accessible immediately at **`http://localhost:8000`**.
+
+---
+
+## 🔒 Security, Data Privacy & Anti-Spam Ethics
+
+1. **Strict Credential Isolation**: `config/secrets.yaml`, `.env`, and local `.db` files are strictly enforced in `.gitignore` to prevent accidental credential leakage.
+2. **Safe Dry-Run Submissions**: The browser automation engine operates in dry-run mode by default, halting before any final submission button and capturing a timestamped screenshot in `data/screenshots/` for human review.
+3. **No Account Password Risk**: LinkedIn and ATS scraping operates on public candidate feeds without requiring or storing user login credentials.
+4. **Anti-Spam Philosophy**: This platform is designed for **high-intent, tailored career discovery**, not low-quality mass spamming. Tailored cover letters and authentic portal submissions safeguard your candidate reputation.
+
+---
+
+## 🤝 Contributing & Community
+
+Contributions are warmly welcomed! To contribute:
+
+1. Fork the repository on GitHub: `https://github.com/JamilKhanEmon/AIJobHunter`
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m "feat: add amazing new capability"`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request on GitHub.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for full details.
 
 ---
 
 <p align="center">
-  Built with ❤️ for autonomous career discovery and intelligent job matching.
+  <b>AI Job Hunter</b> • Built with ❤️ for intelligent, transparent, and authentic career growth.
 </p>
