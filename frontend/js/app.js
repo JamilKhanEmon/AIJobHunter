@@ -39,6 +39,7 @@ const UI = {
   // Actions
   btnMasterAutopilot: document.getElementById("btn-master-autopilot"),
   btnSyncAll: document.getElementById("btn-sync-all"),
+  btnPurgeAll: document.getElementById("btn-purge-all"),
   btnBatchEval: document.getElementById("btn-batch-eval"),
   btnAutoDiscoverTop: document.getElementById("btn-auto-discover-top"),
   btnRunAutoDiscover: document.getElementById("btn-run-auto-discover"),
@@ -83,6 +84,7 @@ const UI = {
   btnGenerateLetter: document.getElementById("btn-generate-letter"),
   btnDrawerOpenPortal: document.getElementById("btn-drawer-open-portal"),
   btnDrawerMarkApplied: document.getElementById("btn-drawer-mark-applied"),
+  btnDrawerDeleteJob: document.getElementById("btn-drawer-delete-job"),
   btnDrawerVerifyLive: document.getElementById("btn-drawer-verify-live"),
   drawerGhostPill: document.getElementById("drawer-ghost-pill"),
   drawerGhostScore: document.getElementById("drawer-ghost-score"),
@@ -971,6 +973,9 @@ function renderDataGrid() {
             <button class="row-action-btn" title="Inspect Full CV Fit Breakdown" onclick="event.stopPropagation(); selectJob(${job.id});">
               👁️
             </button>
+            <button class="row-action-btn" title="Delete job listing" onclick="event.stopPropagation(); deleteJob(${job.id});" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+              🗑️
+            </button>
           </div>
         </td>
       </tr>
@@ -1073,6 +1078,10 @@ function renderJobCards(jobs) {
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openCareerPortal(${job.id});" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; font-weight: 700;">
               Apply Now ↗
             </button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); deleteJob(${job.id});" title="Delete job" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); padding: 0.35rem 0.55rem; display: inline-flex; align-items: center; gap: 0.2rem;" aria-label="Delete Job">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="13" height="13"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Delete</span>
+            </button>
           </div>
         </div>
       </article>
@@ -1129,9 +1138,14 @@ window.renderKanbanBoard = function() {
           <span style="font-size: 0.72rem; color: var(--text-muted);">
             ${job.remote ? '🌐 Remote' : escapeHtml((job.location || 'Global').split(',')[0])}
           </span>
-          <button class="row-action-btn btn-portal-fast" style="padding: 0.2rem 0.55rem; font-size: 0.68rem;" onclick="event.stopPropagation(); openCareerPortal(${job.id});">
-            ↗ Apply on Portal
-          </button>
+          <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <button class="row-action-btn btn-portal-fast" style="padding: 0.2rem 0.55rem; font-size: 0.68rem;" onclick="event.stopPropagation(); openCareerPortal(${job.id});">
+              ↗ Apply
+            </button>
+            <button class="row-action-btn" style="padding: 0.2rem 0.45rem; font-size: 0.68rem; color: #ef4444;" title="Delete job" onclick="event.stopPropagation(); deleteJob(${job.id});">
+              🗑️
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -2098,6 +2112,20 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Clear / Purge All Data
+  if (UI.btnPurgeAll) {
+    UI.btnPurgeAll.addEventListener("click", purgeAllJobs);
+  }
+
+  // Delete Job from Drawer
+  if (UI.btnDrawerDeleteJob) {
+    UI.btnDrawerDeleteJob.addEventListener("click", () => {
+      if (AppState.selectedJobId) {
+        deleteJob(AppState.selectedJobId);
+      }
+    });
+  }
 }
 
 window.setModelPreset = function(modelName) {
@@ -2127,6 +2155,62 @@ window.executeCustom = function(source, inputId) {
   const el = document.getElementById(inputId);
   if (!el || !el.value.trim()) return;
   window.executeCrawl(source, el.value.trim());
+};
+
+// Delete Single Job & Purge All Jobs
+window.deleteJob = async function(jobId) {
+  if (!jobId) return;
+  const target = AppState.jobs.find(j => j.id === jobId);
+  const title = target ? `"${target.title}"` : "this job";
+  if (!confirm(`Are you sure you want to delete ${title}?`)) return;
+
+  try {
+    const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete job");
+
+    appendTerminalLine("DELETED", `Job ID ${jobId} deleted successfully.`, "warn");
+
+    // Remove from local memory
+    AppState.jobs = AppState.jobs.filter(j => j.id !== jobId);
+
+    // Close drawer if open
+    if (AppState.selectedJobId === jobId) {
+      AppState.selectedJobId = null;
+      closeDrawer();
+    }
+
+    // Update UI counters and views
+    if (UI.navCounterTotal) UI.navCounterTotal.textContent = AppState.jobs.length;
+    if (UI.kpiTotal) UI.kpiTotal.textContent = AppState.jobs.length;
+    renderDataGrid();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Failed to delete job: " + err.message);
+  }
+};
+
+window.purgeAllJobs = async function() {
+  const count = AppState.jobs.length;
+  if (!confirm(`Are you sure you want to clear and delete all ${count} job listings? This will wipe the database listings completely.`)) {
+    return;
+  }
+
+  try {
+    appendTerminalLine("PURGE", "Purging all job listings from database...", "warn");
+    const res = await fetch("/api/pipeline/reset-all", { method: "POST" });
+    if (!res.ok) throw new Error("Failed to purge data");
+    const data = await res.json();
+
+    AppState.jobs = [];
+    AppState.selectedJobId = null;
+    closeDrawer();
+
+    appendTerminalLine("PURGE_SUCCESS", data.message || "All job listings have been cleared.", "success");
+    await refreshAllData(false);
+  } catch (err) {
+    console.error("Purge error:", err);
+    alert("Failed to clear data: " + err.message);
+  }
 };
 
 // Direct-From-Source Career Portal & Stage Tracking
